@@ -29,7 +29,9 @@ source files, and they cannot be re-derived — seed from these.
   with each stage's purpose, ISO references and controlled documents
 - `methods.json` — all 63 ETSI methods from Method / Test Mapping rev 1.2, with
   conditions, acceptance criteria, steps and evidence, tools and required IXIT entries.
-  37 of the 63 carry a condition, so 37 need an ICS value before gate 3 can pass
+  Each carries a normalised `conditional` boolean: 37 of the 63 carry a real condition
+  and need an ICS value before gate 3 can pass; the other 26 read `N/A` in the source
+  sheet, meaning unconditional, and have `conditions` nulled
 - `provision-groups.json` — the 14 clause groups and how many methods sit in each
 - `controlled-lists.json` — the controlled drop-down values from tracker sheet 07
 

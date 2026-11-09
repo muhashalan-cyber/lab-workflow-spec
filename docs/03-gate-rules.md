@@ -86,8 +86,11 @@ least-privilege access are genuinely in place.
 **Machine rules**
 
 1. `job_methods` holds exactly 63 rows for the job.
-2. Every row whose `methods.conditions` is non-empty has `ics_support` in (Y, N, N-A),
+2. Every row whose method has `conditional = true` has `ics_support` in (Y, N, N-A),
    with `ics_declared_by` and `ics_declared_at` set. **37 rows in rev 1.2.**
+   *Do not test `conditions` for emptiness:* 26 of the 63 carry the literal string
+   `N/A` in the Conditions column, meaning unconditional. `data/methods.json` carries
+   a normalised `conditional` boolean and nulls `conditions` on those 26 — use it.
 3. Every row has `applicable` in (Y, N).
 4. Every row has a non-empty `applicability_basis`.
 5. `jobs.constrained_device` is not null.
