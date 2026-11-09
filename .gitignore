@@ -1,0 +1,6 @@
+infra/.env
+vendor/
+node_modules/
+storage/
+.env
+*.log

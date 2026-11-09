@@ -1,0 +1,10 @@
+{
+ "workflow_status": ["Not started","In progress","Complete","Passed","Not passed","N/A","Blocked"],
+ "verdict": ["PASS","FAIL","INCONCLUSIVE","N-A","NOT TESTED"],
+ "evidence_class": ["Confirmed by evidence","Declared by the manufacturer / supplier","Observed by the laboratory","Inferred but not confirmed","Unknown / not tested"],
+ "ics_support": ["Y","N","N-A"],
+ "review_status": ["Pending","Accepted","Rejected"],
+ "tlp": ["TLP: RED","TLP: AMBER+STRICT","TLP: AMBER","TLP: GREEN","TLP: CLEAR"],
+ "severity": ["Critical","High","Medium","Low","Informational"],
+ "job_status": ["Open","On hold","Testing","In review","Reported","Done"]
+}

@@ -1,0 +1,475 @@
+{
+ "code": "PR-WKF-01",
+ "revision": "3.0",
+ "title": "Laboratory Testing Project Workflow",
+ "standard": "ISO/IEC 17025:2017 + ETSI TS 103 701 V1.1.1",
+ "stages": [
+  {
+   "number": 1,
+   "title": "Intake and contract review",
+   "sequential": true,
+   "iso_refs": "ISO 7.1 · 4.1 · 4.2 · 6.6",
+   "purpose": "Decide whether the laboratory may and can take the work, on terms both sides understand. Nothing technical starts until this stage closes.",
+   "controlled_documents": [
+    "PR-CTR-01",
+    "CHK-CTR-01",
+    "FR-COI-02"
+   ],
+   "gate": {
+    "number": 1,
+    "statement": "CR-2026-XXX exists, Decision = Accept, and the written Authorization to Test is filed in 00_Contract. Without all three, no technical work begins."
+   },
+   "steps": [
+    {
+     "code": "1.1",
+     "title": "Register and screen the request",
+     "guidance": "Log the request before any technical discussion, so the review has a start date and a reference. Anything outside SC-LAB-01 is excluded or subcontracted — it cannot be absorbed.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Request logged with date received, client, contact and the client's own reference; request document saved to <code>00_Contract</code>",
+      "Scope checked against <code>SC-LAB-01</code>: out-of-scope items excluded, or subcontracting agreed with the client's written approval (<code>PR-EXT-01</code>)"
+     ]
+    },
+    {
+     "code": "1.2",
+     "title": "Impartiality, confidentiality and capability",
+     "guidance": "Ask specifically whether the laboratory or any assigned person designed, consulted on, sold or previously certified this DUT or its firmware. Check calibration against the planned job end, not today.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "<code>FR-COI-02</code> completed with prior involvement in this DUT, its firmware or the vendor explicitly checked; any risk recorded in <code>RG-RSK-01</code> with its mitigation, or the work declined",
+      "<code>FR-CONF-02</code> and <code>FR-CONF-01</code> on file; authorized person in <code>RG-CMP-01</code>, equipment in <code>RG-EQP-01</code> valid past the planned job end, and the required method all confirmed available"
+     ]
+    },
+    {
+     "code": "1.3",
+     "title": "Contract, decision rule and authorization to test",
+     "guidance": "Ambiguity written here is the single largest cause of dispute later. For security testing the authorization letter is what makes the testing lawful and bounded.",
+     "record_reference_label": "Contract review ID",
+     "record_reference_example": "CR-2026-001",
+     "requirements": [
+      "<code>CHK-CTR-01</code> completed in full; DUT, versions, services, interfaces in and out of scope, environment, dates and deliverables documented; decision rule and statement-of-conformity basis agreed in writing (ISO 7.1.3)",
+      "<b>Written Authorization to Test</b> on file stating rules of engagement, interfaces and IP ranges, test window, whether destructive testing is permitted, data handling and escalation contact — and <code>CR-2026-XXX</code> logged with Decision = Accept"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 2,
+   "title": "Job setup and readiness",
+   "sequential": true,
+   "iso_refs": "ISO 6.2 · 6.3 · 6.4 · 7.4 · 7.5 · 7.11",
+   "purpose": "Turn an accepted contract into a controlled job with people, equipment, item and records ready before anyone touches the device.",
+   "controlled_documents": [
+    "PR-TR-01",
+    "PR-ITEM-01",
+    "PR-EQP-01"
+   ],
+   "gate": {
+    "number": 2,
+    "statement": "JOB-2026-XXX is open, the job file exists, roles are authorized, the item and equipment are recorded as fit, and the three job documents exist with a version."
+   },
+   "steps": [
+    {
+     "code": "2.1",
+     "title": "Open the job and the job file",
+     "guidance": "The Job_Register row is the spine everything else hangs from.",
+     "record_reference_label": "Job ID",
+     "record_reference_example": "JOB-2026-001",
+     "requirements": [
+      "<code>JOB-2026-XXX</code> created in Process_Control &gt; Job_Register, linked to the CR ID, with Responsible Engineer, Technical Reviewer and Authorized Signatory named and dates set",
+      "Job folder created to the <code>PR-TR-01</code> structure (<code>00_Contract</code> … <code>06_NC_Complaints</code>) and its path recorded"
+     ]
+    },
+    {
+     "code": "2.2",
+     "title": "People, item, equipment and environment",
+     "guidance": "Competence is not a job title — it is the authority flags in RG-CMP-01 against the methods this job uses. Record the item as it actually arrived, including anything wrong with it.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Each role holder Active in <code>RG-CMP-01</code> with the right authority flag and the methods authorized; the Technical Reviewer is not the tester, or the deputy / external reviewer is recorded",
+      "<code>FR-ITEM-01A</code> completed with photographs, condition and any abnormality; client consulted if the item is unsuitable; item in controlled, segregated storage",
+      "Equipment In Service with Next Due Date past the planned job end and fitness confirmed; bench, isolated test network (<code>PR-ENV-01</code>) and least-privilege job access (<code>RG-ACC-01</code>) in place"
+     ]
+    },
+    {
+     "code": "2.3",
+     "title": "Create the job document set",
+     "guidance": "One set per DUT and project, each file from its controlled template. Never reuse another job's copies.",
+     "record_reference_label": "IXIT document version",
+     "record_reference_example": "JOB-2026-001_IXIT_v0.1",
+     "requirements": [
+      "Workflow tracker, <code>IXIT &amp; DUT Identification</code> (placed in <code>Test Report › [03] Forms</code>) and <code>Method / Test Mapping</code> copied from controlled templates, versioned under <code>PR-DOC-01</code>, recorded in <code>01 Job Record</code>; kick-off held on scope, roles, safety, confidentiality and evidence naming"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 3,
+   "title": "DUT identification and the ICS",
+   "sequential": true,
+   "iso_refs": "ETSI TS 103 701 Annex A · ISO 7.2 · 7.4",
+   "purpose": "Fix exactly what is being assessed, and establish which ETSI provisions apply to it. Every ICS Support value switches methods on or off — an ICS accepted without challenge produces a conformity statement resting on an unverified claim.",
+   "controlled_documents": [
+    "IXIT doc §1–2",
+    "Mapping G–I"
+   ],
+   "gate": {
+    "number": 3,
+    "statement": "Every conditional method carries an ICS Support value, every one of the 63 methods carries an applicability decision with its basis, and every N has been challenged and accepted by the laboratory."
+   },
+   "steps": [
+    {
+     "code": "3.1",
+     "title": "Identify the DUT",
+     "guidance": "§2 of the IXIT document is the unambiguous identification ISO 7.8.2 will require in the report. The constrained-device answer alone changes the applicability of several provisions.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "IXIT document §1 document control complete (standard, test specification, scope, methodology, project ID, prepared and reviewed by, classification, version, date); file named for the job in <code>Test Report › [03] Forms</code>",
+      "§2 complete: manufacturer, model, hardware revision, serial, MAC, firmware as received <b>and</b> at end of assessment, interfaces, management address, default credential source, companion app, supplied material — anything not supplied marked “Not provided” with the reason, never left blank"
+     ]
+    },
+    {
+     "code": "3.2",
+     "title": "Obtain and challenge the ICS",
+     "guidance": "This is an assessment activity, not an inbox task. Challenge anything the device's own description contradicts.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "<b>ICS Support (G)</b> returned Y / N / N-A for every method whose Conditions column states a condition, attributable to who declared it and when",
+      "<b>Applicable? (H)</b> set for all 63 methods with its basis in <b>(I)</b>; every N and N-A challenged against its condition and against §2; clarifications logged in tracker <code>06C</code> and closed"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 4,
+   "title": "IXIT completion and adequacy review",
+   "sequential": true,
+   "iso_refs": "ETSI TS 103 701 Annex B · ISO 7.2 · 7.5 · 7.11",
+   "purpose": "Collect the implementation detail the methods need, and confirm it is good enough to assess against. One entry per real thing — a single-entry IXIT silently collapses the assessment into one untraceable test.",
+   "controlled_documents": [
+    "IXIT doc IXIT 1–29",
+    "Mapping R"
+   ],
+   "gate": {
+    "number": 4,
+    "statement": "Every IXIT entry named by an applicable method is present at entry-per-mechanism granularity, with its information source recorded, and the IXIT document is approved at an issue version."
+   },
+   "steps": [
+    {
+     "code": "4.1",
+     "title": "Collect the IXIT",
+     "guidance": "Reject records that say “all interfaces are secured”. Every mechanism, component, interface, parameter and service gets its own row and its own ID. IXIT 1–29 are filled in the job copy of <code>IXIT_and_DUT_Identification_Template.docx</code>, in <code>Test Report › [03] Forms</code>.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Required IXIT tables identified from <b>Required IXIT Entries (R)</b> across every method with Applicable = Y",
+      "IXIT 1–29 completed in the job copy: one entry per mechanism keeping its template ID, information source recorded per entry, unused template rows deleted, and dependencies cross-referenced by ID (AuthMech → SecParam, ComMech → NetSecImpl, SoftServ → Intf, UpdMech → UpdProc)"
+     ]
+    },
+    {
+     "code": "4.2",
+     "title": "Adequacy review and approval",
+     "guidance": "Adequacy observations are part of the assessment record and may be reported. Missing information is an information gap — it is never an N/A.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Every entry checked against the fields column R asks for; entries that are vague, inconsistent or contradict §2 recorded in tracker <code>06C</code> with their effect on the verdict",
+      "Consolidated clarification issued with owner and due date, responses re-reviewed and the gap rows closed; no required entry left empty; IXIT document approved at an issue version and recorded in tracker <code>04A</code>"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 5,
+   "title": "Method selection and the test plan",
+   "sequential": true,
+   "iso_refs": "ISO 7.2 · 7.7",
+   "purpose": "Confirm the applicable methods are valid for this DUT, settle deviations in advance, and plan the work before anyone touches the device.",
+   "controlled_documents": [
+    "PR-MET-01",
+    "Mapping",
+    "Tracker 06"
+   ],
+   "gate": {
+    "number": 5,
+    "statement": "Applicability is complete for all 63 methods, verification or validation records exist for every method in use, deviations are authorized, and the Technical Reviewer has approved the plan."
+   },
+   "steps": [
+    {
+     "code": "5.1",
+     "title": "Confirm the methods and settle deviations",
+     "guidance": "Methods are controlled documents — never edit a method's steps or acceptance criteria inside a job copy. A deviation authorized after the fact is a nonconformity, not a deviation.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Job copy taken from the current controlled mapping revision, with columns A–F, J, K, P and R untouched",
+      "Verification evidence on first use for standard methods; modified or laboratory-developed methods validated and authorized under <code>PR-MET-01</code>, with the record in <code>05_Review_QC</code> before use",
+      "Every applicable method has the IXIT entries column R names present and adequate; any departure from a method authorized in advance in tracker <code>06A</code> with its justification and its effect on the verdict"
+     ]
+    },
+    {
+     "code": "5.2",
+     "title": "Plan the work and approve it",
+     "guidance": "Testing does not start on a draft plan.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Test plan written: tester per method, equipment IDs, setup and network topology, schedule, evidence to capture and its naming convention, QC checks planned in tracker <code>06B</code> with an acceptance criterion each, and the safety and destructive-testing constraints from the Authorization to Test",
+      "Plan approved by the Technical Reviewer and recorded with name and date in <code>01 Job Record</code>"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 6,
+   "title": "Assessment execution and evidence",
+   "sequential": true,
+   "iso_refs": "ISO 7.5 · 7.7 · 6.4",
+   "purpose": "Perform the assessment and produce records another competent person could re-create the result from. Work the loop: for each method with Applicable = Y, conceptual assessment first, then functional.",
+   "controlled_documents": [
+    "Mapping L · O",
+    "Tracker 05",
+    "Tracker 06"
+   ],
+   "gate": {
+    "number": 6,
+    "statement": "Every applicable method has a tester verdict, every verdict names at least one registered Evidence ID, every evidence file is registered once with a hash, and planned QC is logged."
+   },
+   "steps": [
+    {
+     "code": "6.1",
+     "title": "Baseline the DUT and assess conceptually",
+     "guidance": "Every later observation is relative to the baseline, so capture it before you start. Write the reasoning, not just the conclusion.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "DUT baseline set and captured as evidence: factory reset or documented configuration, firmware version, network topology",
+      "Conceptual assessment of the IXIT entries in column R against the acceptance criteria in column K, with the reasoning written in <b>Tester Notes (S)</b>; insufficient information recorded as a gap in tracker <code>06C</code>"
+     ]
+    },
+    {
+     "code": "6.2",
+     "title": "Test the DUT and register the evidence",
+     "guidance": "An unrecorded deviation invalidates the result. Register each file once — never twice under two Evidence IDs, and never cite an unregistered artefact.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Functional assessment executed in the controlled setup using only <code>RG-EQP-01</code> equipment, with the IDs <b>actually</b> used recorded in tracker <code>03</code>; any unplanned deviation authorized in <code>06A</code>, or work stopped and <code>NC-2026-XXX</code> raised, before continuing",
+      "Each evidence file registered once in tracker <code>05</code> with ID, type, description, location, SHA-256, date, collector, related method and IXIT IDs, confidentiality and retention; stored in <code>03_Evidence</code> under its Evidence ID"
+     ]
+    },
+    {
+     "code": "6.3",
+     "title": "Set the verdicts and run quality control",
+     "guidance": "The verdict comes from the acceptance criteria, not from impression. N-A traces to a declaration, never to missing information.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "<b>Verdict (Tester) (L)</b> set for every method with Applicable = Y, taken strictly from column K, with <b>Evidence ID(s) (O)</b> populated; N-A used only where it traces to the ICS, INCONCLUSIVE where information is missing and testing cannot resolve it",
+      "Planned QC performed under <code>PR-QC-01</code> and logged in tracker <code>06B</code> and Process_Control &gt; QC_Activities; verdict counts entered per provision group in tracker <code>04B</code>"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 7,
+   "title": "Technical review",
+   "sequential": true,
+   "iso_refs": "ISO 7.5 · 7.7 · 6.2 · 7.8.7",
+   "purpose": "Confirm independently that the records support the verdicts, before anything is reported. The reviewer did not perform the work.",
+   "controlled_documents": [
+    "Mapping M · N",
+    "Tracker 04",
+    "Tracker 05"
+   ],
+   "gate": {
+    "number": 7,
+    "statement": "Every tested method carries a reviewer verdict and a Final Verdict, the tracker counts reconcile, and the reviewer has signed the review record in 05_Review_QC."
+   },
+   "steps": [
+    {
+     "code": "7.1",
+     "title": "Confirm independence and completeness",
+     "guidance": "",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Reviewer did not perform the work under review and holds Can Perform Technical Review = Yes in <code>RG-CMP-01</code>",
+      "Every method with Applicable = Y carries a tester verdict; every Applicable = N has a basis in (I) that matches the ICS declaration in (G)"
+     ]
+    },
+    {
+     "code": "7.2",
+     "title": "Check traceability and correctness, then sign",
+     "guidance": "Traceability is what an assessor will test hardest: can any single verdict be followed back to a file with a hash? The Final Verdict column is what the report reproduces.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Every tested method names an Evidence ID that exists in tracker <code>05</code>; every file in <code>03_Evidence</code> is registered with a matching SHA-256; every IXIT entry a verdict rests on is in the approved IXIT document",
+      "No PASS the recorded evidence does not support; every deviation authorized in advance; every INCONCLUSIVE states what was missing and what would resolve it; equipment calibration valid on the test date; planned QC performed",
+      "<b>Verdict (Reviewer) (M)</b> and <b>Final Verdict (N)</b> set for every tested method, anything not accepted returned and re-reviewed; tracker <code>04</code> reconciliation reads OK; review record signed and stored in <code>05_Review_QC</code>"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 8,
+   "title": "Reporting",
+   "sequential": true,
+   "iso_refs": "ISO 7.8",
+   "purpose": "Report the results accurately, clearly and unambiguously, with a conformity statement that rests on the agreed decision rule.",
+   "controlled_documents": [
+    "PR-REP-01",
+    "Report template"
+   ],
+   "gate": {
+    "number": 8,
+    "statement": "The report is signed by an Authorized Signatory, logged as REP-2026-XXX, and issued with the transmittal recorded."
+   },
+   "steps": [
+    {
+     "code": "8.1",
+     "title": "Draft the report",
+     "guidance": "ISO 7.8.2 content is not negotiable, and a reader must be able to see what was not tested and why.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "ISO 7.8.2 content present: laboratory identity and where the work was performed, client, unambiguous item identification with hardware and firmware versions, dates of receipt and of testing, methods and any deviations or exclusions, results, the person authorizing the report, and the statement that results relate only to the items tested",
+      "Results reported per provision with verdict, method applied and basis; Not Applicable provisions shown with their ICS justification; INCONCLUSIVE verdicts and material IXIT observations carried forward",
+      "Decision rule applied and stated with the risk it accepts; the scope of the conformity statement stated; opinions and interpretations marked as such and issued only by authorized personnel; any subcontracted result and its provider identified"
+     ]
+    },
+    {
+     "code": "8.2",
+     "title": "Finalize, approve and issue",
+     "guidance": "",
+     "record_reference_label": "Report ID",
+     "record_reference_example": "REP-2026-001",
+     "requirements": [
+      "Every <code>{{...}}</code> placeholder replaced, Annex T deleted, §4 counts and figures taken from tracker <code>04</code>, and TLP and classification consistent on the cover, in the header and in the footer",
+      "Checked against the reviewed records and signed by the Authorized Signatory; <code>REP-2026-XXX</code> logged in Process_Control &gt; Reports_Index; issued through the agreed channel with the transmittal recorded in <code>04_Report</code>"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 9,
+   "title": "Closure",
+   "sequential": true,
+   "iso_refs": "ISO 7.4 · 7.11 · 8.4 · 8.6",
+   "purpose": "Return the item, secure the records, learn from the job and close it formally.",
+   "controlled_documents": [
+    "PR-REC-CTRL-01",
+    "PR-ITEM-01"
+   ],
+   "gate": {
+    "number": 9,
+    "statement": "Item disposed of as agreed, job file archived with retention applied, access revoked, Job_Register Status = Done."
+   },
+   "steps": [
+    {
+     "code": "9.1",
+     "title": "Deal with the item and archive the records",
+     "guidance": "",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Item returned, retained or disposed of exactly as agreed with action, date and recipient recorded; device restored or securely wiped where firmware or credentials were modified during testing",
+      "Job file complete — IXIT document, mapping, tracker, test plan, evidence, review record, signed report and transmittal — archived under <code>PR-REC-CTRL-01</code> with the retention period applied and the backup verified"
+     ]
+    },
+    {
+     "code": "9.2",
+     "title": "Close down access and close the job",
+     "guidance": "",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Job-specific access rights revoked in <code>RG-ACC-01</code> and recorded; client data held outside the archive securely deleted",
+      "Client feedback requested and recorded, lessons fed into <code>RG-RSK-01</code> and <code>PR-MRV-01</code>, and Job_Register Status = Done with the End Date"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 10,
+   "title": "Nonconforming work",
+   "sequential": false,
+   "iso_refs": "ISO 7.10 · 8.7 · 8.5",
+   "purpose": "Contain work that does not conform to this procedure or to the client's requirements, and decide what happens to the results. Can be triggered at any point in the job.",
+   "controlled_documents": [
+    "PR-NC-01",
+    "PR-CAP-01"
+   ],
+   "gate": {
+    "number": 10,
+    "statement": "The decision on affected work is recorded, the client has been informed where a report was affected, resumption is authorized in writing, and the NC is closed with an outcome."
+   },
+   "steps": [
+    {
+     "code": "10.1",
+     "title": "Contain and decide",
+     "guidance": "",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "<code>NC-2026-XXX</code> recorded in Process_Control &gt; NC_Work_Log with its significance, the immediate action taken and the affected work held",
+      "Decision on the affected work taken and recorded; client informed and any issued report recalled or amended where it was affected"
+     ]
+    },
+    {
+     "code": "10.2",
+     "title": "Resume and correct",
+     "guidance": "",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Resumption of work authorized in writing; corrective action raised under <code>PR-CAP-01</code> where the nonconformity recurs or could recur, its reference recorded, and the NC closed with an outcome"
+     ]
+    }
+   ]
+  },
+  {
+   "number": 11,
+   "title": "Complaints",
+   "sequential": false,
+   "iso_refs": "ISO 7.9",
+   "purpose": "Handle a complaint about the laboratory's activities, with the investigation and the decision taken by people who were not involved in the work complained of.",
+   "controlled_documents": [
+    "PR-COM-01"
+   ],
+   "gate": {
+    "number": 11,
+    "statement": "The outcome is decided by person(s) not involved in the original activity, communicated formally to the complainant, and the complaint is closed."
+   },
+   "steps": [
+    {
+     "code": "11.1",
+     "title": "Receive and validate",
+     "guidance": "Gathering and verifying the information needed to validate the complaint is the laboratory's responsibility, not the complainant's.",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "<code>CMP-2026-XXX</code> logged in Process_Control &gt; Complaints_Log and receipt acknowledged; confirmed whether it relates to laboratory activities the lab is responsible for, with out-of-scope complaints closed in writing with an explanation"
+     ]
+    },
+    {
+     "code": "11.2",
+     "title": "Investigate, decide and close",
+     "guidance": "",
+     "record_reference_label": null,
+     "record_reference_example": null,
+     "requirements": [
+      "Investigated by someone not involved in the original work (ISO 7.9.5); job file, tracker, mapping, IXIT document, evidence, review record and report examined; <code>NC-2026-XXX</code> raised where nonconforming work is confirmed",
+      "Decision made, reviewed and approved by person(s) not involved in the original activity (ISO 7.9.6); outcome and formal notice of closure communicated to the complainant and recorded"
+     ]
+    }
+   ]
+  }
+ ]
+}

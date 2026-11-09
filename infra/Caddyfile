@@ -1,0 +1,20 @@
+# Internal hostname only. The lab box is not published to the internet.
+# For a LAN name with no public DNS, use Caddy's internal CA (below) and install its
+# root on the machines that will use the system. For a real certificate, switch to
+# DNS-01 with your provider — never open port 80 to the internet for HTTP-01.
+
+{$APP_HOSTNAME:labflow.lan} {
+	tls internal
+
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+
+	reverse_proxy app:8080
+}

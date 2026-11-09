@@ -1,0 +1,1177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{color-scheme:light dark}
+  html,body{margin:0}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+<title>PR-WKF-01 Job Runner</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ground:#EDF1F4; --surface:#FFFFFF; --surface-2:#F5F8FA; --sunk:#E3E9ED;
+  --ink:#0F1B26; --ink-2:#42566A; --ink-3:#75899C;
+  --line:#D5DEE5; --line-2:#C2CFD9;
+  --accent:#0B6E77; --accent-soft:#DDEFF0; --accent-ink:#075159; --on-accent:#FFFFFF;
+  --gate:#9A6A12; --gate-soft:#FBF0DA;
+  --done:#2C7A55; --done-soft:#DEEFE5;
+  --alert:#A63A32; --alert-soft:#F7E3E1;
+  --shadow:0 1px 2px rgba(15,27,38,.06), 0 6px 18px rgba(15,27,38,.06);
+  --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0B1219; --surface:#141F2A; --surface-2:#1A2733; --sunk:#0F1922;
+    --ink:#E4ECF3; --ink-2:#A3B5C5; --ink-3:#738799;
+    --line:#26343F; --line-2:#33454F;
+    --accent:#3EBDC2; --accent-soft:#0E3238; --accent-ink:#7FD9DC; --on-accent:#08181C;
+    --gate:#E0A741; --gate-soft:#33280F;
+    --done:#54C48D; --done-soft:#123425;
+    --alert:#E8756A; --alert-soft:#3A1B18;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0B1219; --surface:#141F2A; --surface-2:#1A2733; --sunk:#0F1922;
+  --ink:#E4ECF3; --ink-2:#A3B5C5; --ink-3:#738799;
+  --line:#26343F; --line-2:#33454F;
+  --accent:#3EBDC2; --accent-soft:#0E3238; --accent-ink:#7FD9DC; --on-accent:#08181C;
+  --gate:#E0A741; --gate-soft:#33280F;
+  --done:#54C48D; --done-soft:#123425;
+  --alert:#E8756A; --alert-soft:#3A1B18;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px}
+.mono{font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, monospace}
+.cond{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif}
+
+
+/* ---------- document set strip (rev 2.0) ---------- */
+.docset{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:14px 16px; margin:0 0 20px}
+.docset h3{margin:0 0 2px; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink-3); font-weight:700}
+.docset p.ds-sub{margin:0 0 10px; font-size:13px; color:var(--ink-2)}
+.docset ul{list-style:none; margin:0; padding:0; display:grid; gap:7px}
+.docset li{display:flex; gap:10px; align-items:baseline; font-size:13.5px; flex-wrap:wrap}
+.docset .ds-name{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12.5px;
+  color:var(--accent-ink); background:var(--accent-soft); border-radius:5px; padding:1px 7px; white-space:nowrap}
+.docset .ds-role{color:var(--ink-2)}
+.docset .ds-note{margin:10px 0 0; padding-top:10px; border-top:1px solid var(--line);
+  font-size:12.5px; color:var(--ink-3)}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:20; background:var(--surface);
+  border-bottom:1px solid var(--line); border-top:3px solid var(--accent);
+}
+.topbar-in{
+  max-width:1180px; margin:0 auto; padding:10px 22px;
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+}
+.brand{display:flex; align-items:center; gap:12px; margin-right:auto}
+.brand-txt{display:flex; flex-direction:column; gap:1px}
+.logo{height:30px; width:auto; display:block}
+.logo[hidden], .wordmark[hidden]{display:none}
+.wordmark{
+  font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif; font-weight:700;
+  font-size:22px; letter-spacing:.19em; color:var(--accent); line-height:1;
+  padding-right:2px;
+}
+.brand-rule{width:1px; height:30px; background:var(--line-2); flex:none}
+.brand .code{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--accent); font-weight:600;
+}
+.brand .name{font-size:16px; font-weight:700; letter-spacing:-.01em; line-height:1.2}
+.jobbox{display:flex; align-items:center; gap:8px}
+label.fld{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+select,input[type=text]{
+  font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--ink);
+  background:var(--surface-2); border:1px solid var(--line-2); border-radius:7px;
+  padding:6px 9px; max-width:230px;
+}
+select{font-family:"IBM Plex Sans",sans-serif}
+.btn{
+  border:1px solid var(--line-2); background:var(--surface-2); color:var(--ink);
+  border-radius:7px; padding:6px 12px; font-size:13px; font-weight:500; cursor:pointer;
+  display:inline-flex; align-items:center; gap:6px; transition:background .12s,border-color .12s;
+}
+.btn:hover{background:var(--sunk); border-color:var(--ink-3)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.42; cursor:not-allowed}
+.btn.ghost{background:transparent; border-color:transparent; color:var(--ink-2)}
+.btn.ghost:hover{background:var(--sunk); border-color:transparent}
+
+.meter{display:flex; align-items:center; gap:9px}
+.meter-track{width:120px; height:6px; border-radius:99px; background:var(--sunk); overflow:hidden}
+.meter-fill{height:100%; background:var(--accent); border-radius:99px; transition:width .3s ease}
+.meter-num{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-2); font-variant-numeric:tabular-nums}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1180px; margin:0 auto; padding:24px 22px 72px}
+.btn.danger{color:var(--alert)}
+.btn.danger:hover{background:var(--alert-soft); border-color:transparent}
+.bar{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:12px 15px; border-radius:9px; margin-bottom:16px;
+  background:var(--surface); border:1px solid var(--line-2);
+  border-left:4px solid var(--accent); box-shadow:var(--shadow); font-size:14px;
+}
+.bar.warn{border-left-color:var(--alert)}
+.bar .bar-msg{color:var(--ink)}
+.bar .bar-msg b{font-weight:600}
+.bar .bar-actions{display:flex; gap:8px; margin-left:auto; flex-wrap:wrap}
+.bar-field{display:flex; align-items:center; gap:7px}
+.bar-field label{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+.bar-field input{font-family:"IBM Plex Sans",sans-serif; max-width:190px}
+.notice{
+  display:flex; gap:10px; align-items:flex-start; padding:9px 13px; border-radius:8px;
+  background:var(--gate-soft); border:1px solid color-mix(in srgb, var(--gate) 35%, transparent);
+  font-size:13px; color:var(--ink-2); margin-bottom:18px;
+}
+.notice b{color:var(--ink)}
+
+/* ---------- master ---------- */
+.sec-head{display:flex; align-items:baseline; gap:12px; margin:0 0 4px}
+.sec-head h2{font-size:17px; margin:0; letter-spacing:-.01em}
+.sec-head .sub{font-size:13px; color:var(--ink-3)}
+.spine{position:relative; margin-top:16px; display:flex; flex-direction:column; gap:8px}
+.spine::before{
+  content:""; position:absolute; left:25px; top:26px; bottom:26px; width:2px;
+  background:var(--line); border-radius:2px;
+}
+.stage{
+  position:relative; display:grid; grid-template-columns:52px 1fr auto; align-items:center;
+  gap:14px; padding:13px 16px 13px 0; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:var(--shadow); text-align:left; width:100%;
+  cursor:pointer; transition:border-color .15s, transform .12s;
+}
+.stage:hover{border-color:var(--accent); transform:translateX(2px)}
+.stage[data-state="locked"]{opacity:.72}
+.stage[data-state="locked"]:hover{border-color:var(--line-2)}
+.num{
+  justify-self:center; width:34px; height:34px; border-radius:50%; display:grid; place-items:center;
+  font-family:"IBM Plex Sans Condensed",sans-serif; font-weight:700; font-size:15px;
+  background:var(--sunk); color:var(--ink-2); border:2px solid var(--surface);
+  box-shadow:0 0 0 2px var(--line); position:relative; z-index:1;
+}
+.stage[data-state="active"] .num{background:var(--accent); color:var(--on-accent); box-shadow:0 0 0 2px var(--accent)}
+.stage[data-state="done"] .num{background:var(--done); color:#fff; box-shadow:0 0 0 2px var(--done)}
+.stage[data-state="open"] .num{background:var(--gate-soft); color:var(--gate); box-shadow:0 0 0 2px var(--gate)}
+.st-body{min-width:0}
+.st-title{font-weight:600; font-size:15px; letter-spacing:-.005em}
+.st-meta{display:flex; flex-wrap:wrap; gap:6px; margin-top:5px; align-items:center}
+.chip{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; padding:2px 6px; border-radius:5px;
+  background:var(--surface-2); border:1px solid var(--line); color:var(--ink-3); white-space:nowrap;
+}
+.chip.iso{color:var(--accent-ink); background:var(--accent-soft); border-color:transparent}
+.st-right{display:flex; align-items:center; gap:14px}
+.pill{
+  font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+  padding:3px 9px; border-radius:99px; white-space:nowrap;
+}
+.pill.locked{background:var(--sunk); color:var(--ink-3)}
+.pill.active{background:var(--accent-soft); color:var(--accent-ink)}
+.pill.done{background:var(--done-soft); color:var(--done)}
+.pill.open{background:var(--gate-soft); color:var(--gate)}
+.ring{width:38px; height:38px; flex:none}
+.ring text{font-family:"IBM Plex Mono",monospace; font-size:11px; fill:var(--ink-2); font-weight:500}
+.branch{margin-top:30px}
+.branch .spine::before{background:repeating-linear-gradient(to bottom,var(--line) 0 4px,transparent 4px 9px)}
+
+/* ---------- stage view ---------- */
+.crumb{display:flex; align-items:center; gap:10px; margin-bottom:14px}
+.stage-head{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:18px 20px; box-shadow:var(--shadow); margin-bottom:18px;
+}
+.stage-head h1{margin:0; font-size:22px; letter-spacing:-.02em; text-wrap:balance}
+.eyebrow{
+  font-family:"IBM Plex Sans Condensed",sans-serif; font-size:12px; font-weight:700;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin-bottom:3px;
+}
+.purpose{color:var(--ink-2); margin:8px 0 12px; max-width:66ch}
+.cols{display:grid; grid-template-columns:290px 1fr; gap:20px; align-items:start}
+@media (max-width:860px){ .cols{grid-template-columns:1fr} }
+.rail{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:8px; box-shadow:var(--shadow); position:sticky; top:74px;
+}
+@media (max-width:860px){ .rail{position:static} }
+.rail-h{
+  font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);
+  font-weight:600; padding:8px 10px 6px;
+}
+.rstep{
+  display:grid; grid-template-columns:22px 1fr; gap:10px; align-items:start; width:100%;
+  text-align:left; background:transparent; border:0; border-radius:8px; padding:9px 10px;
+  cursor:pointer; color:var(--ink-2); font-size:13.5px; line-height:1.4;
+}
+.rstep:hover{background:var(--surface-2)}
+.rstep[aria-current="true"]{background:var(--accent-soft); color:var(--ink)}
+.rstep .dot{
+  width:20px; height:20px; border-radius:50%; display:grid; place-items:center; margin-top:1px;
+  border:1.5px solid var(--line-2); font-size:10px; font-family:"IBM Plex Mono",monospace;
+  color:var(--ink-3); background:var(--surface);
+}
+.rstep[data-s="done"] .dot{background:var(--done); border-color:var(--done); color:#fff}
+.rstep[data-s="current"] .dot{border-color:var(--accent); color:var(--accent); font-weight:600}
+.rstep[data-s="locked"]{opacity:.55}
+.rstep .rid{font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-3); display:block}
+
+.panel{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.panel-h{padding:18px 22px 14px; border-bottom:1px solid var(--line)}
+.panel-h h3{margin:0; font-size:18px; letter-spacing:-.015em; text-wrap:balance}
+.panel-h .what{color:var(--ink-2); margin:8px 0 0; max-width:64ch}
+.panel-b{padding:16px 22px 20px}
+.req-h{
+  font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);
+  font-weight:600; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;
+}
+ul.reqs{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px}
+ul.reqs li{margin:0}
+.req{
+  display:grid; grid-template-columns:22px 1fr; gap:11px; align-items:start; width:100%;
+  text-align:left; background:transparent; border:0; border-radius:8px; padding:9px 10px;
+  cursor:pointer; color:var(--ink); font-size:14.5px; line-height:1.5; font-family:inherit;
+}
+.req:hover:not(:disabled){background:var(--surface-2)}
+.req:disabled{cursor:not-allowed; color:var(--ink-3)}
+.box{
+  width:19px; height:19px; border-radius:5px; border:1.5px solid var(--line-2);
+  background:var(--surface); display:grid; place-items:center; margin-top:2px; flex:none;
+  transition:background .12s, border-color .12s;
+}
+.req[aria-pressed="true"] .box{background:var(--done); border-color:var(--done)}
+.box svg{width:12px; height:12px; opacity:0; transition:opacity .12s}
+.req[aria-pressed="true"] .box svg{opacity:1}
+.req[aria-pressed="true"] .rtext{color:var(--ink-2)}
+.rtext code{
+  font-family:"IBM Plex Mono",monospace; font-size:.86em; background:var(--surface-2);
+  border:1px solid var(--line); border-radius:4px; padding:1px 4px; white-space:nowrap;
+}
+.refbox{
+  margin-top:16px; padding:13px 14px; background:var(--surface-2); border:1px solid var(--line);
+  border-radius:9px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.refbox label{font-size:12.5px; color:var(--ink-2); font-weight:500}
+.gatebox{
+  margin-top:16px; padding:13px 15px; border-radius:9px; background:var(--gate-soft);
+  border-left:4px solid var(--gate); font-size:13.5px; color:var(--ink-2);
+}
+.gatebox b{
+  color:var(--gate); font-family:"IBM Plex Sans Condensed",sans-serif; letter-spacing:.1em;
+  text-transform:uppercase; font-size:12px; display:block; margin-bottom:3px;
+}
+.actions{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:15px 22px; background:var(--surface-2); border-top:1px solid var(--line);
+}
+.hint{font-size:12.5px; color:var(--ink-3); margin-left:auto; text-align:right}
+.done-banner{
+  display:flex; align-items:center; gap:10px; padding:12px 15px; border-radius:9px;
+  background:var(--done-soft); color:var(--done); font-weight:600; font-size:14px; margin-bottom:16px;
+}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion: reduce){*{transition:none!important; animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <!-- LOGO SLOT: paste a data URI into src below and delete the `hidden` attribute.
+           e.g. src="data:image/svg+xml;base64,PHN2Zy..."  (or image/png;base64,...)
+           The CIPHER wordmark beside it is hidden automatically once a logo loads. -->
+      <img id="cipherlogo" class="logo" alt="CIPHER" hidden>
+      <span class="wordmark" id="wordmark">CIPHER</span>
+      <span class="brand-rule" aria-hidden="true"></span>
+      <span class="brand-txt">
+        <span class="code">PR-WKF-01 · rev 3.0</span>
+        <span class="name">Laboratory Testing Project Workflow</span>
+      </span>
+    </div>
+    <div class="jobbox">
+      <label class="fld" for="jobsel">Job</label>
+      <select id="jobsel" aria-label="Select job"></select>
+      <button class="btn ghost" id="renamejob" title="Edit client and device for this job">Edit job</button>
+      <button class="btn ghost danger" id="deletejob" title="Delete this job" aria-label="Delete this job">Delete</button>
+      <button class="btn" id="newjob">+ New job</button>
+    </div>
+    <div class="jobbox">
+      <label class="fld" for="who">You</label>
+      <input type="text" id="who" placeholder="your name" style="max-width:140px" autocomplete="name">
+    </div>
+    <div class="meter" title="Requirements satisfied across the whole job">
+      <div class="meter-track"><div class="meter-fill" id="mfill" style="width:0%"></div></div>
+      <span class="meter-num" id="mnum">0 / 0</span>
+    </div>
+    <button class="btn" id="import">Import record</button>
+    <button class="btn" id="export">Export record</button>
+    <input type="file" id="importfile" accept=".md,.json,.txt,text/markdown,application/json,text/plain" hidden>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="bar" id="bar" hidden></div>
+  <div class="notice" id="storenote" hidden></div>
+  <div id="view"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================ WORKFLOW CONTENT ============================ */
+const R = (t, ref) => ({ t, ref });
+const STAGES = [
+{
+  id:1, seq:true, title:"Intake and contract review",
+  iso:"ISO 7.1 · 4.1 · 4.2 · 6.6", docs:["PR-CTR-01","CHK-CTR-01","FR-COI-02"],
+  purpose:"Decide whether the laboratory may and can take the work, on terms both sides understand. Nothing technical starts until this stage closes.",
+  gate:"CR-2026-XXX exists, Decision = Accept, and the written Authorization to Test is filed in 00_Contract. Without all three, no technical work begins.",
+  steps:[
+   {id:"1.1", title:"Register and screen the request",
+    what:"Log the request before any technical discussion, so the review has a start date and a reference. Anything outside SC-LAB-01 is excluded or subcontracted — it cannot be absorbed.",
+    req:["Request logged with date received, client, contact and the client's own reference; request document saved to <code>00_Contract</code>",
+         "Scope checked against <code>SC-LAB-01</code>: out-of-scope items excluded, or subcontracting agreed with the client's written approval (<code>PR-EXT-01</code>)"]},
+   {id:"1.2", title:"Impartiality, confidentiality and capability",
+    what:"Ask specifically whether the laboratory or any assigned person designed, consulted on, sold or previously certified this DUT or its firmware. Check calibration against the planned job end, not today.",
+    req:["<code>FR-COI-02</code> completed with prior involvement in this DUT, its firmware or the vendor explicitly checked; any risk recorded in <code>RG-RSK-01</code> with its mitigation, or the work declined",
+         "<code>FR-CONF-02</code> and <code>FR-CONF-01</code> on file; authorized person in <code>RG-CMP-01</code>, equipment in <code>RG-EQP-01</code> valid past the planned job end, and the required method all confirmed available"]},
+   {id:"1.3", title:"Contract, decision rule and authorization to test",
+    what:"Ambiguity written here is the single largest cause of dispute later. For security testing the authorization letter is what makes the testing lawful and bounded.",
+    req:["<code>CHK-CTR-01</code> completed in full; DUT, versions, services, interfaces in and out of scope, environment, dates and deliverables documented; decision rule and statement-of-conformity basis agreed in writing (ISO 7.1.3)",
+         "<b>Written Authorization to Test</b> on file stating rules of engagement, interfaces and IP ranges, test window, whether destructive testing is permitted, data handling and escalation contact — and <code>CR-2026-XXX</code> logged with Decision = Accept"],
+    ref:{label:"Contract review ID", ph:"CR-2026-001"}}
+  ]
+},
+{
+  id:2, seq:true, title:"Job setup and readiness",
+  iso:"ISO 6.2 · 6.3 · 6.4 · 7.4 · 7.5 · 7.11", docs:["PR-TR-01","PR-ITEM-01","PR-EQP-01"],
+  purpose:"Turn an accepted contract into a controlled job with people, equipment, item and records ready before anyone touches the device.",
+  gate:"JOB-2026-XXX is open, the job file exists, roles are authorized, the item and equipment are recorded as fit, and the three job documents exist with a version.",
+  steps:[
+   {id:"2.1", title:"Open the job and the job file",
+    what:"The Job_Register row is the spine everything else hangs from.",
+    req:["<code>JOB-2026-XXX</code> created in Process_Control &gt; Job_Register, linked to the CR ID, with Responsible Engineer, Technical Reviewer and Authorized Signatory named and dates set",
+         "Job folder created to the <code>PR-TR-01</code> structure (<code>00_Contract</code> … <code>06_NC_Complaints</code>) and its path recorded"],
+    ref:{label:"Job ID", ph:"JOB-2026-001"}},
+   {id:"2.2", title:"People, item, equipment and environment",
+    what:"Competence is not a job title — it is the authority flags in RG-CMP-01 against the methods this job uses. Record the item as it actually arrived, including anything wrong with it.",
+    req:["Each role holder Active in <code>RG-CMP-01</code> with the right authority flag and the methods authorized; the Technical Reviewer is not the tester, or the deputy / external reviewer is recorded",
+         "<code>FR-ITEM-01A</code> completed with photographs, condition and any abnormality; client consulted if the item is unsuitable; item in controlled, segregated storage",
+         "Equipment In Service with Next Due Date past the planned job end and fitness confirmed; bench, isolated test network (<code>PR-ENV-01</code>) and least-privilege job access (<code>RG-ACC-01</code>) in place"]},
+   {id:"2.3", title:"Create the job document set",
+    what:"One set per DUT and project, each file from its controlled template. Never reuse another job's copies.",
+    req:["Workflow tracker, <code>IXIT &amp; DUT Identification</code> (placed in <code>Test Report › [03] Forms</code>) and <code>Method / Test Mapping</code> copied from controlled templates, versioned under <code>PR-DOC-01</code>, recorded in <code>01 Job Record</code>; kick-off held on scope, roles, safety, confidentiality and evidence naming"],
+    ref:{label:"IXIT document version", ph:"JOB-2026-001_IXIT_v0.1"}}
+  ]
+},
+{
+  id:3, seq:true, title:"DUT identification and the ICS",
+  iso:"ETSI TS 103 701 Annex A · ISO 7.2 · 7.4", docs:["IXIT doc §1–2","Mapping G–I"],
+  purpose:"Fix exactly what is being assessed, and establish which ETSI provisions apply to it. Every ICS Support value switches methods on or off — an ICS accepted without challenge produces a conformity statement resting on an unverified claim.",
+  gate:"Every conditional method carries an ICS Support value, every one of the 63 methods carries an applicability decision with its basis, and every N has been challenged and accepted by the laboratory.",
+  steps:[
+   {id:"3.1", title:"Identify the DUT",
+    what:"§2 of the IXIT document is the unambiguous identification ISO 7.8.2 will require in the report. The constrained-device answer alone changes the applicability of several provisions.",
+    req:["IXIT document §1 document control complete (standard, test specification, scope, methodology, project ID, prepared and reviewed by, classification, version, date); file named for the job in <code>Test Report › [03] Forms</code>",
+         "§2 complete: manufacturer, model, hardware revision, serial, MAC, firmware as received <b>and</b> at end of assessment, interfaces, management address, default credential source, companion app, supplied material — anything not supplied marked “Not provided” with the reason, never left blank"]},
+   {id:"3.2", title:"Obtain and challenge the ICS",
+    what:"This is an assessment activity, not an inbox task. Challenge anything the device's own description contradicts.",
+    req:["<b>ICS Support (G)</b> returned Y / N / N-A for every method whose Conditions column states a condition, attributable to who declared it and when",
+         "<b>Applicable? (H)</b> set for all 63 methods with its basis in <b>(I)</b>; every N and N-A challenged against its condition and against §2; clarifications logged in tracker <code>06C</code> and closed"]}
+  ]
+},
+{
+  id:4, seq:true, title:"IXIT completion and adequacy review",
+  iso:"ETSI TS 103 701 Annex B · ISO 7.2 · 7.5 · 7.11", docs:["IXIT doc IXIT 1–29","Mapping R"],
+  purpose:"Collect the implementation detail the methods need, and confirm it is good enough to assess against. One entry per real thing — a single-entry IXIT silently collapses the assessment into one untraceable test.",
+  gate:"Every IXIT entry named by an applicable method is present at entry-per-mechanism granularity, with its information source recorded, and the IXIT document is approved at an issue version.",
+  steps:[
+   {id:"4.1", title:"Collect the IXIT",
+    what:"Reject records that say “all interfaces are secured”. Every mechanism, component, interface, parameter and service gets its own row and its own ID. IXIT 1–29 are filled in the job copy of <code>IXIT_and_DUT_Identification_Template.docx</code>, in <code>Test Report › [03] Forms</code>.",
+    req:["Required IXIT tables identified from <b>Required IXIT Entries (R)</b> across every method with Applicable = Y",
+         "IXIT 1–29 completed in the job copy: one entry per mechanism keeping its template ID, information source recorded per entry, unused template rows deleted, and dependencies cross-referenced by ID (AuthMech → SecParam, ComMech → NetSecImpl, SoftServ → Intf, UpdMech → UpdProc)"]},
+   {id:"4.2", title:"Adequacy review and approval",
+    what:"Adequacy observations are part of the assessment record and may be reported. Missing information is an information gap — it is never an N/A.",
+    req:["Every entry checked against the fields column R asks for; entries that are vague, inconsistent or contradict §2 recorded in tracker <code>06C</code> with their effect on the verdict",
+         "Consolidated clarification issued with owner and due date, responses re-reviewed and the gap rows closed; no required entry left empty; IXIT document approved at an issue version and recorded in tracker <code>04A</code>"]}
+  ]
+},
+{
+  id:5, seq:true, title:"Method selection and the test plan",
+  iso:"ISO 7.2 · 7.7", docs:["PR-MET-01","Mapping","Tracker 06"],
+  purpose:"Confirm the applicable methods are valid for this DUT, settle deviations in advance, and plan the work before anyone touches the device.",
+  gate:"Applicability is complete for all 63 methods, verification or validation records exist for every method in use, deviations are authorized, and the Technical Reviewer has approved the plan.",
+  steps:[
+   {id:"5.1", title:"Confirm the methods and settle deviations",
+    what:"Methods are controlled documents — never edit a method's steps or acceptance criteria inside a job copy. A deviation authorized after the fact is a nonconformity, not a deviation.",
+    req:["Job copy taken from the current controlled mapping revision, with columns A–F, J, K, P and R untouched",
+         "Verification evidence on first use for standard methods; modified or laboratory-developed methods validated and authorized under <code>PR-MET-01</code>, with the record in <code>05_Review_QC</code> before use",
+         "Every applicable method has the IXIT entries column R names present and adequate; any departure from a method authorized in advance in tracker <code>06A</code> with its justification and its effect on the verdict"]},
+   {id:"5.2", title:"Plan the work and approve it",
+    what:"Testing does not start on a draft plan.",
+    req:["Test plan written: tester per method, equipment IDs, setup and network topology, schedule, evidence to capture and its naming convention, QC checks planned in tracker <code>06B</code> with an acceptance criterion each, and the safety and destructive-testing constraints from the Authorization to Test",
+         "Plan approved by the Technical Reviewer and recorded with name and date in <code>01 Job Record</code>"]}
+  ]
+},
+{
+  id:6, seq:true, title:"Assessment execution and evidence",
+  iso:"ISO 7.5 · 7.7 · 6.4", docs:["Mapping L · O","Tracker 05","Tracker 06"],
+  purpose:"Perform the assessment and produce records another competent person could re-create the result from. Work the loop: for each method with Applicable = Y, conceptual assessment first, then functional.",
+  gate:"Every applicable method has a tester verdict, every verdict names at least one registered Evidence ID, every evidence file is registered once with a hash, and planned QC is logged.",
+  steps:[
+   {id:"6.1", title:"Baseline the DUT and assess conceptually",
+    what:"Every later observation is relative to the baseline, so capture it before you start. Write the reasoning, not just the conclusion.",
+    req:["DUT baseline set and captured as evidence: factory reset or documented configuration, firmware version, network topology",
+         "Conceptual assessment of the IXIT entries in column R against the acceptance criteria in column K, with the reasoning written in <b>Tester Notes (S)</b>; insufficient information recorded as a gap in tracker <code>06C</code>"]},
+   {id:"6.2", title:"Test the DUT and register the evidence",
+    what:"An unrecorded deviation invalidates the result. Register each file once — never twice under two Evidence IDs, and never cite an unregistered artefact.",
+    req:["Functional assessment executed in the controlled setup using only <code>RG-EQP-01</code> equipment, with the IDs <b>actually</b> used recorded in tracker <code>03</code>; any unplanned deviation authorized in <code>06A</code>, or work stopped and <code>NC-2026-XXX</code> raised, before continuing",
+         "Each evidence file registered once in tracker <code>05</code> with ID, type, description, location, SHA-256, date, collector, related method and IXIT IDs, confidentiality and retention; stored in <code>03_Evidence</code> under its Evidence ID"]},
+   {id:"6.3", title:"Set the verdicts and run quality control",
+    what:"The verdict comes from the acceptance criteria, not from impression. N-A traces to a declaration, never to missing information.",
+    req:["<b>Verdict (Tester) (L)</b> set for every method with Applicable = Y, taken strictly from column K, with <b>Evidence ID(s) (O)</b> populated; N-A used only where it traces to the ICS, INCONCLUSIVE where information is missing and testing cannot resolve it",
+         "Planned QC performed under <code>PR-QC-01</code> and logged in tracker <code>06B</code> and Process_Control &gt; QC_Activities; verdict counts entered per provision group in tracker <code>04B</code>"]}
+  ]
+},
+{
+  id:7, seq:true, title:"Technical review",
+  iso:"ISO 7.5 · 7.7 · 6.2 · 7.8.7", docs:["Mapping M · N","Tracker 04","Tracker 05"],
+  purpose:"Confirm independently that the records support the verdicts, before anything is reported. The reviewer did not perform the work.",
+  gate:"Every tested method carries a reviewer verdict and a Final Verdict, the tracker counts reconcile, and the reviewer has signed the review record in 05_Review_QC.",
+  steps:[
+   {id:"7.1", title:"Confirm independence and completeness",
+    what:"",
+    req:["Reviewer did not perform the work under review and holds Can Perform Technical Review = Yes in <code>RG-CMP-01</code>",
+         "Every method with Applicable = Y carries a tester verdict; every Applicable = N has a basis in (I) that matches the ICS declaration in (G)"]},
+   {id:"7.2", title:"Check traceability and correctness, then sign",
+    what:"Traceability is what an assessor will test hardest: can any single verdict be followed back to a file with a hash? The Final Verdict column is what the report reproduces.",
+    req:["Every tested method names an Evidence ID that exists in tracker <code>05</code>; every file in <code>03_Evidence</code> is registered with a matching SHA-256; every IXIT entry a verdict rests on is in the approved IXIT document",
+         "No PASS the recorded evidence does not support; every deviation authorized in advance; every INCONCLUSIVE states what was missing and what would resolve it; equipment calibration valid on the test date; planned QC performed",
+         "<b>Verdict (Reviewer) (M)</b> and <b>Final Verdict (N)</b> set for every tested method, anything not accepted returned and re-reviewed; tracker <code>04</code> reconciliation reads OK; review record signed and stored in <code>05_Review_QC</code>"]}
+  ]
+},
+{
+  id:8, seq:true, title:"Reporting",
+  iso:"ISO 7.8", docs:["PR-REP-01","Report template"],
+  purpose:"Report the results accurately, clearly and unambiguously, with a conformity statement that rests on the agreed decision rule.",
+  gate:"The report is signed by an Authorized Signatory, logged as REP-2026-XXX, and issued with the transmittal recorded.",
+  steps:[
+   {id:"8.1", title:"Draft the report",
+    what:"ISO 7.8.2 content is not negotiable, and a reader must be able to see what was not tested and why.",
+    req:["ISO 7.8.2 content present: laboratory identity and where the work was performed, client, unambiguous item identification with hardware and firmware versions, dates of receipt and of testing, methods and any deviations or exclusions, results, the person authorizing the report, and the statement that results relate only to the items tested",
+         "Results reported per provision with verdict, method applied and basis; Not Applicable provisions shown with their ICS justification; INCONCLUSIVE verdicts and material IXIT observations carried forward",
+         "Decision rule applied and stated with the risk it accepts; the scope of the conformity statement stated; opinions and interpretations marked as such and issued only by authorized personnel; any subcontracted result and its provider identified"]},
+   {id:"8.2", title:"Finalize, approve and issue",
+    what:"",
+    req:["Every <code>{{...}}</code> placeholder replaced, Annex T deleted, §4 counts and figures taken from tracker <code>04</code>, and TLP and classification consistent on the cover, in the header and in the footer",
+         "Checked against the reviewed records and signed by the Authorized Signatory; <code>REP-2026-XXX</code> logged in Process_Control &gt; Reports_Index; issued through the agreed channel with the transmittal recorded in <code>04_Report</code>"],
+    ref:{label:"Report ID", ph:"REP-2026-001"}}
+  ]
+},
+{
+  id:9, seq:true, title:"Closure",
+  iso:"ISO 7.4 · 7.11 · 8.4 · 8.6", docs:["PR-REC-CTRL-01","PR-ITEM-01"],
+  purpose:"Return the item, secure the records, learn from the job and close it formally.",
+  gate:"Item disposed of as agreed, job file archived with retention applied, access revoked, Job_Register Status = Done.",
+  steps:[
+   {id:"9.1", title:"Deal with the item and archive the records",
+    what:"",
+    req:["Item returned, retained or disposed of exactly as agreed with action, date and recipient recorded; device restored or securely wiped where firmware or credentials were modified during testing",
+         "Job file complete — IXIT document, mapping, tracker, test plan, evidence, review record, signed report and transmittal — archived under <code>PR-REC-CTRL-01</code> with the retention period applied and the backup verified"]},
+   {id:"9.2", title:"Close down access and close the job",
+    what:"",
+    req:["Job-specific access rights revoked in <code>RG-ACC-01</code> and recorded; client data held outside the archive securely deleted",
+         "Client feedback requested and recorded, lessons fed into <code>RG-RSK-01</code> and <code>PR-MRV-01</code>, and Job_Register Status = Done with the End Date"]}
+  ]
+},
+{
+  id:10, seq:false, title:"Nonconforming work",
+  iso:"ISO 7.10 · 8.7 · 8.5", docs:["PR-NC-01","PR-CAP-01"],
+  purpose:"Contain work that does not conform to this procedure or to the client's requirements, and decide what happens to the results. Can be triggered at any point in the job.",
+  gate:"The decision on affected work is recorded, the client has been informed where a report was affected, resumption is authorized in writing, and the NC is closed with an outcome.",
+  steps:[
+   {id:"10.1", title:"Contain and decide",
+    what:"",
+    req:["<code>NC-2026-XXX</code> recorded in Process_Control &gt; NC_Work_Log with its significance, the immediate action taken and the affected work held",
+         "Decision on the affected work taken and recorded; client informed and any issued report recalled or amended where it was affected"]},
+   {id:"10.2", title:"Resume and correct",
+    what:"",
+    req:["Resumption of work authorized in writing; corrective action raised under <code>PR-CAP-01</code> where the nonconformity recurs or could recur, its reference recorded, and the NC closed with an outcome"]}
+  ]
+},
+{
+  id:11, seq:false, title:"Complaints",
+  iso:"ISO 7.9", docs:["PR-COM-01"],
+  purpose:"Handle a complaint about the laboratory's activities, with the investigation and the decision taken by people who were not involved in the work complained of.",
+  gate:"The outcome is decided by person(s) not involved in the original activity, communicated formally to the complainant, and the complaint is closed.",
+  steps:[
+   {id:"11.1", title:"Receive and validate",
+    what:"Gathering and verifying the information needed to validate the complaint is the laboratory's responsibility, not the complainant's.",
+    req:["<code>CMP-2026-XXX</code> logged in Process_Control &gt; Complaints_Log and receipt acknowledged; confirmed whether it relates to laboratory activities the lab is responsible for, with out-of-scope complaints closed in writing with an explanation"]},
+   {id:"11.2", title:"Investigate, decide and close",
+    what:"",
+    req:["Investigated by someone not involved in the original work (ISO 7.9.5); job file, tracker, mapping, IXIT document, evidence, review record and report examined; <code>NC-2026-XXX</code> raised where nonconforming work is confirmed",
+         "Decision made, reviewed and approved by person(s) not involved in the original activity (ISO 7.9.6); outcome and formal notice of closure communicated to the complainant and recorded"]}
+  ]
+}
+];
+
+const STAGE_BY_ID = Object.fromEntries(STAGES.map(s => [s.id, s]));
+const SEQ = STAGES.filter(s => s.seq);
+const BRANCH = STAGES.filter(s => !s.seq);
+const TOTAL_REQS = STAGES.reduce((a,s)=>a+s.steps.reduce((b,st)=>b+st.req.length,0),0);
+
+/* ============================ CAPABILITIES ============================ */
+function useCap(name){
+  try {
+    if (typeof window !== "undefined" && window.claude && typeof window.claude.use === "function")
+      return window.claude.use(name).catch(() => null);
+  } catch (e) {}
+  return Promise.resolve(null);
+}
+
+/* ============================ STATE ============================ */
+let db = null;
+let jobs = [];                 // [{id, title, createdAt}]
+let jobId = null;
+let job = null;                // {id,title,createdAt,updatedAt,state:{stepId:{items:{},done,doneAt,doneBy}},refs:{}}
+let view = { name:"master", stage:null, step:null };
+let who = "";
+let saveTimer = null;
+const LS = "prwkf01.local.v1";
+
+function blankJob(id, title){
+  return { id, title, client:"", device:"", createdAt:new Date().toISOString(),
+           updatedAt:new Date().toISOString(), state:{}, refs:{} };
+}
+function jobTitleFrom(client, device, id){
+  const c = (client||"").trim(), d = (device||"").trim();
+  if (c && d) return c + " — " + d + " · " + id;
+  if (c) return c + " · " + id;
+  if (d) return d + " · " + id;
+  return id;
+}
+function stepState(stepId){
+  return job && job.state[stepId] ? job.state[stepId] : { items:{}, done:false };
+}
+function isItemDone(stepId, i){ return !!stepState(stepId).items[i]; }
+function stepReqCount(stage){ return stage.steps.reduce((a,s)=>a+s.req.length,0); }
+function stepDoneCount(stepId, step){
+  const st = stepState(stepId); let n = 0;
+  for (let i=0;i<step.req.length;i++) if (st.items[i]) n++;
+  return n;
+}
+function stepComplete(step){ return stepDoneCount(step.id, step) === step.req.length && stepState(step.id).done; }
+function stageDoneReqs(stage){ return stage.steps.reduce((a,s)=>a+stepDoneCount(s.id,s),0); }
+function stageComplete(stage){ return stage.steps.every(stepComplete); }
+function stageUnlocked(stage){
+  if (!stage.seq) return true;
+  const idx = SEQ.findIndex(s=>s.id===stage.id);
+  if (idx <= 0) return true;
+  return stageComplete(SEQ[idx-1]);
+}
+function stageState(stage){
+  if (stageComplete(stage)) return "done";
+  if (!stageUnlocked(stage)) return "locked";
+  if (stageDoneReqs(stage) > 0) return "active";
+  return stage.seq ? "active" : "open";
+}
+function firstOpenStepIndex(stage){
+  const i = stage.steps.findIndex(s => !stepComplete(s));
+  return i === -1 ? stage.steps.length - 1 : i;
+}
+function stepUnlocked(stage, idx){
+  if (!stageUnlocked(stage)) return false;
+  for (let i=0;i<idx;i++) if (!stepComplete(stage.steps[i])) return false;
+  return true;
+}
+function totalDone(){ return STAGES.reduce((a,s)=>a+stageDoneReqs(s),0); }
+
+/* ============================ PERSISTENCE ============================ */
+function localSave(){
+  try{ localStorage.setItem(LS, JSON.stringify({jobs, jobId, who, data:{[job.id]:job}})); }catch(e){}
+}
+function localLoad(){
+  try{
+    const raw = localStorage.getItem(LS); if (!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function scheduleSave(){
+  job.updatedAt = new Date().toISOString();
+  localSave();
+  if (!db) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try { await db.doc("jobs/" + job.id).set(job); }
+    catch (e) { note(e && e.code === "quota_exceeded"
+      ? "The shared store is full, so this change was kept on this device only. Delete an old job to free space."
+      : "Could not save to the shared store just now — this change is kept on this device."); }
+  }, 400);
+}
+function bar(msg, actions, warn){
+  const el = document.getElementById("bar");
+  el.hidden = false;
+  el.className = "bar" + (warn ? " warn" : "");
+  el.innerHTML = `<span class="bar-msg">${msg}</span><span class="bar-actions"></span>`;
+  const holder = el.querySelector(".bar-actions");
+  actions.forEach(a => {
+    const b = document.createElement("button");
+    b.className = "btn" + (a.kind === "primary" ? " primary" : a.kind === "danger" ? " danger" : "");
+    b.textContent = a.label;
+    b.addEventListener("click", () => { closeBar(); a.run && a.run(); });
+    holder.appendChild(b);
+  });
+  el.querySelector("button").focus();
+}
+function closeBar(){ const el = document.getElementById("bar"); el.hidden = true; el.innerHTML = ""; }
+
+function note(msg){
+  const n = document.getElementById("storenote");
+  n.hidden = false; n.innerHTML = msg;
+}
+
+/* ============================ RENDER: MASTER ============================ */
+function ring(done, total){
+  const r = 15, C = 2*Math.PI*r, p = total ? done/total : 0;
+  const arc = p > 0 ? `<circle cx="19" cy="19" r="${r}" fill="none" stroke="${p>=1?'var(--done)':'var(--accent)'}" stroke-width="3.5"
+      stroke-linecap="round" stroke-dasharray="${(C*p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 19 19)"></circle>` : "";
+  return `<svg class="ring" viewBox="0 0 38 38" role="img" aria-label="${done} of ${total} requirements satisfied">
+    <circle cx="19" cy="19" r="${r}" fill="none" stroke="var(--sunk)" stroke-width="3.5"></circle>
+    ${arc}
+    <text x="19" y="22.5" text-anchor="middle">${done}</text>
+  </svg>`;
+}
+function stageRow(stage){
+  const st = stageState(stage);
+  const total = stepReqCount(stage), done = stageDoneReqs(stage);
+  const label = st === "done" ? "Complete" : st === "locked" ? "Locked" : st === "open" ? "On demand"
+    : (done > 0 ? "In progress" : "Ready");
+  return `<button class="stage" data-state="${st}" data-stage="${stage.id}">
+    <span class="num">${st==="done" ? "✓" : stage.id}</span>
+    <span class="st-body">
+      <span class="st-title">${stage.title}</span>
+      <span class="st-meta">
+        <span class="chip iso">${stage.iso}</span>
+        ${stage.docs.map(d=>`<span class="chip">${d}</span>`).join("")}
+        <span class="chip">${stage.steps.length} steps · ${total} requirements</span>
+      </span>
+    </span>
+    <span class="st-right">
+      <span class="pill ${st}">${label}</span>
+      ${ring(done,total)}
+    </span>
+  </button>`;
+}
+function renderMaster(){
+  document.getElementById("view").innerHTML = `
+    <div class="docset">
+      <h3>Job document set · rev 3.0</h3>
+      <p class="ds-sub">Four controlled documents per job. The ETSI assessment workbook is withdrawn.</p>
+      <ul>
+        <li><span class="ds-name">IXIT &amp; DUT Identification</span><span class="ds-role">DUT identification and IXIT 1–29, filled in the job copy in <b>Test Report › [03] Forms</b> — ETSI steps 1 and 3</span></li>
+        <li><span class="ds-name">Method / Test Mapping</span><span class="ds-role">ICS, applicability, method detail, verdicts, evidence IDs — ETSI steps 2, 4, 5, 6, 8</span></li>
+        <li><span class="ds-name">Workflow Tracker</span><span class="ds-role">ISO records: job record, resources and item, verdict roll-up, evidence register, deviations and QC</span></li>
+        <li><span class="ds-name">Assessment Report</span><span class="ds-role">The client deliverable — ETSI step 9 / ISO 7.8</span></li>
+      </ul>
+      <p class="ds-note">Lab-wide registers stay in <b>Process_Control.xlsx</b> and are referenced by ID, never duplicated. The ICS lives in mapping columns G–I: an N/A verdict must trace to a declaration there, never to missing supplier information.</p>
+    </div>
+    <div class="sec-head">
+      <h2>Job stages</h2>
+      <span class="sub">Stages 1–9 run in order — each unlocks when the one before it closes its gate.</span>
+    </div>
+    <div class="spine">${SEQ.map(stageRow).join("")}</div>
+    <div class="branch">
+      <div class="sec-head">
+        <h2>Triggered at any time</h2>
+        <span class="sub">Available throughout the job, not gated by the sequence.</span>
+      </div>
+      <div class="spine">${BRANCH.map(stageRow).join("")}</div>
+    </div>`;
+  document.querySelectorAll("[data-stage]").forEach(b => b.addEventListener("click", () => openStage(+b.dataset.stage)));
+}
+
+/* ============================ RENDER: STAGE ============================ */
+function openStage(id){
+  const stage = STAGE_BY_ID[id];
+  view = { name:"stage", stage:id, step:firstOpenStepIndex(stage) };
+  render();
+  window.scrollTo({top:0, behavior:"instant"});
+}
+function renderStage(){
+  const stage = STAGE_BY_ID[view.stage];
+  const unlocked = stageUnlocked(stage);
+  const idx = Math.min(view.step, stage.steps.length-1);
+  const step = stage.steps[idx];
+  const canEdit = unlocked && stepUnlocked(stage, idx);
+  const sst = stepState(step.id);
+  const nDone = stepDoneCount(step.id, step);
+  const allTicked = nDone === step.req.length;
+  const isLast = idx === stage.steps.length-1;
+  const complete = stageComplete(stage);
+
+  const rail = stage.steps.map((s,i) => {
+    const done = stepComplete(s);
+    const cur = i === idx;
+    const lock = !stepUnlocked(stage, i);
+    const state = done ? "done" : cur ? "current" : lock ? "locked" : "open";
+    return `<button class="rstep" data-s="${state}" data-step="${i}" aria-current="${cur}">
+      <span class="dot">${done ? "✓" : i+1}</span>
+      <span><span class="rid">${s.id}</span>${s.title}</span>
+    </button>`;
+  }).join("");
+
+  const reqs = step.req.map((t,i) => `<li><button class="req" data-req="${i}" aria-pressed="${isItemDone(step.id,i)}" ${canEdit?"":"disabled"}>
+      <span class="box"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.2 4.4 9 10.5 2.8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="rtext">${t}</span>
+    </button></li>`).join("");
+
+  const refHtml = step.ref ? `<div class="refbox">
+      <label for="refin">${step.ref.label}</label>
+      <input type="text" id="refin" class="mono" placeholder="${step.ref.ph}" value="${(job.refs[step.id]||"").replace(/"/g,"&quot;")}" ${canEdit?"":"disabled"}>
+      <span class="hint" style="margin:0">Recorded on the job and included in the export.</span>
+    </div>` : "";
+
+  const gateHtml = isLast ? `<div class="gatebox"><b>Gate for stage ${stage.id}</b>${stage.gate}</div>` : "";
+
+  const stamp = sst.done && sst.doneAt
+    ? `Completed ${new Date(sst.doneAt).toLocaleDateString(undefined,{day:"2-digit",month:"short",year:"numeric"})}${sst.doneBy?" · "+esc(sst.doneBy):""}`
+    : `${nDone} of ${step.req.length} requirements satisfied`;
+
+  document.getElementById("view").innerHTML = `
+    <div class="crumb">
+      <button class="btn ghost" id="back">&larr; All stages</button>
+      <span class="chip">Stage ${stage.id} of 11</span>
+    </div>
+    ${complete ? `<div class="done-banner">✓ Stage ${stage.id} complete — gate satisfied.</div>` : ""}
+    ${!unlocked ? `<div class="notice"><b>Locked.</b>&nbsp;Close the gate on stage ${SEQ[SEQ.findIndex(s=>s.id===stage.id)-1].id} first. You can read this stage now; the checkboxes open when it unlocks.</div>` : ""}
+    <div class="stage-head">
+      <div class="eyebrow">Stage ${stage.id}</div>
+      <h1>${stage.title}</h1>
+      <p class="purpose">${stage.purpose}</p>
+      <div class="st-meta">
+        <span class="chip iso">${stage.iso}</span>
+        ${stage.docs.map(d=>`<span class="chip">${d}</span>`).join("")}
+      </div>
+    </div>
+    <div class="cols">
+      <nav class="rail" aria-label="Steps in this stage">
+        <div class="rail-h">Steps</div>
+        ${rail}
+      </nav>
+      <section class="panel">
+        <div class="panel-h">
+          <h3>${step.id} &nbsp;${step.title}</h3>
+          ${step.what ? `<p class="what">${step.what}</p>` : ""}
+        </div>
+        <div class="panel-b">
+          <div class="req-h"><span>Requirements to satisfy</span><span class="mono">${nDone}/${step.req.length}</span></div>
+          <ul class="reqs">${reqs}</ul>
+          ${refHtml}
+          ${gateHtml}
+        </div>
+        <div class="actions">
+          ${sst.done
+            ? `<button class="btn" id="reopen" ${canEdit?"":"disabled"}>Reopen step</button>`
+            : `<button class="btn primary" id="complete" ${(canEdit&&allTicked)?"":"disabled"}>Mark step complete</button>`}
+          ${idx>0 ? `<button class="btn" id="prev">&larr; Previous</button>` : ""}
+          ${!isLast ? `<button class="btn" id="next" ${stepComplete(step)?"":"disabled"}>Next step &rarr;</button>` : ""}
+          <span class="hint">${stamp}</span>
+        </div>
+      </section>
+    </div>`;
+
+  document.getElementById("back").addEventListener("click", () => { view={name:"master"}; render(); });
+  document.querySelectorAll("[data-step]").forEach(b => b.addEventListener("click", () => { view.step = +b.dataset.step; render(); }));
+  document.querySelectorAll("[data-req]").forEach(b => b.addEventListener("click", () => toggleReq(step, +b.dataset.req)));
+  const p = document.getElementById("prev"); if (p) p.addEventListener("click", () => { view.step = idx-1; render(); });
+  const n = document.getElementById("next"); if (n) n.addEventListener("click", () => { view.step = idx+1; render(); });
+  const c = document.getElementById("complete"); if (c) c.addEventListener("click", () => completeStep(stage, step, idx));
+  const ro = document.getElementById("reopen"); if (ro) ro.addEventListener("click", () => { getStep(step.id).done=false; scheduleSave(); render(); });
+  const ri = document.getElementById("refin"); if (ri) ri.addEventListener("input", () => { job.refs[step.id]=ri.value; scheduleSave(); });
+}
+
+function getStep(stepId){
+  if (!job.state[stepId]) job.state[stepId] = { items:{}, done:false };
+  return job.state[stepId];
+}
+function toggleReq(step, i){
+  const st = getStep(step.id);
+  st.items[i] = !st.items[i];
+  if (!st.items[i]) st.done = false;
+  scheduleSave(); render();
+}
+function completeStep(stage, step, idx){
+  const st = getStep(step.id);
+  st.done = true; st.doneAt = new Date().toISOString(); st.doneBy = who || "";
+  scheduleSave();
+  if (idx < stage.steps.length-1) view.step = idx+1;
+  render();
+}
+
+/* ============================ SHELL ============================ */
+function esc(s){ return String(s).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch])); }
+
+function renderTop(){
+  const sel = document.getElementById("jobsel");
+  sel.innerHTML = jobs.map(j => `<option value="${esc(j.id)}"${j.id===jobId?" selected":""}>${esc(j.title||j.id)}</option>`).join("");
+  const done = totalDone();
+  document.getElementById("mfill").style.width = (TOTAL_REQS ? (done/TOTAL_REQS*100) : 0).toFixed(1) + "%";
+  document.getElementById("mnum").textContent = done + " / " + TOTAL_REQS;
+}
+function render(){
+  renderTop();
+  if (view.name === "stage") renderStage(); else renderMaster();
+}
+
+/* ---------- job management ---------- */
+function newJobId(){
+  const yr = new Date().getFullYear();
+  let n = 1;
+  const used = new Set(jobs.map(j=>j.id));
+  while (used.has("JOB-"+yr+"-"+String(n).padStart(3,"0"))) n++;
+  return "JOB-"+yr+"-"+String(n).padStart(3,"0");
+}
+async function createJob(){
+  const id = newJobId();
+  const j = blankJob(id, id);
+  jobs.unshift({ id, title:j.title, createdAt:j.createdAt });
+  jobId = id; job = j;
+  view = { name:"master" };
+  localSave(); render(); openJobEditor();
+  if (db) { try { await db.doc("jobs/"+id).set(j); } catch(e){ note("Job created on this device — it could not be written to the shared store."); } }
+}
+async function switchJob(id){
+  closeBar();
+  jobId = id;
+  if (db) {
+    try {
+      const snap = await db.doc("jobs/"+id).get();
+      job = snap.exists ? normalize(snap.data()) : blankJob(id, id);
+    } catch(e){ job = blankJob(id, id); }
+  } else {
+    const l = localLoad();
+    job = (l && l.data && l.data[id]) ? normalize(l.data[id]) : blankJob(id, id);
+  }
+  view = { name:"master" };
+  localSave(); render();
+}
+function normalize(d){
+  const j = blankJob(d.id || jobId, d.title || d.id || jobId);
+  j.client = typeof d.client === "string" ? d.client : "";
+  j.device = typeof d.device === "string" ? d.device : "";
+  j.createdAt = d.createdAt || j.createdAt;
+  j.updatedAt = d.updatedAt || j.updatedAt;
+  j.state = (d.state && typeof d.state === "object") ? JSON.parse(JSON.stringify(d.state)) : {};
+  j.refs  = (d.refs  && typeof d.refs  === "object") ? JSON.parse(JSON.stringify(d.refs))  : {};
+  return j;
+}
+
+function openJobEditor(){
+  const el = document.getElementById("bar");
+  el.hidden = false; el.className = "bar";
+  el.innerHTML = `
+    <span class="bar-msg"><b>${esc(job.id)}</b></span>
+    <span class="bar-field"><label for="edclient">Client</label>
+      <input type="text" id="edclient" placeholder="e.g. SAIP" value="${esc(job.client||"")}"></span>
+    <span class="bar-field"><label for="eddevice">Device / DUT</label>
+      <input type="text" id="eddevice" placeholder="e.g. network camera" value="${esc(job.device||"")}"></span>
+    <span class="bar-actions">
+      <button class="btn primary" id="edsave">Save</button>
+      <button class="btn" id="edcancel">Cancel</button>
+    </span>`;
+  const save = () => {
+    job.client = document.getElementById("edclient").value.trim();
+    job.device = document.getElementById("eddevice").value.trim();
+    job.title  = jobTitleFrom(job.client, job.device, job.id);
+    const row = jobs.find(x => x.id === job.id); if (row) row.title = job.title;
+    closeBar(); scheduleSave(); render();
+  };
+  document.getElementById("edsave").addEventListener("click", save);
+  document.getElementById("edcancel").addEventListener("click", closeBar);
+  el.querySelectorAll("input").forEach(i => i.addEventListener("keydown", e => {
+    if (e.key === "Enter") save();
+    if (e.key === "Escape") closeBar();
+  }));
+  document.getElementById("edclient").focus();
+}
+
+/* ---------- export ---------- */
+function buildRecord(){
+  const L = [];
+  L.push("# Workflow completion record — " + (job.title || job.id));
+  L.push("");
+  L.push("Procedure: PR-WKF-01 rev 3.0 · ISO/IEC 17025:2017 + ETSI TS 103 701");
+  L.push("Job: " + job.id);
+  if (job.client) L.push("Client: " + job.client);
+  if (job.device) L.push("Device / DUT: " + job.device);
+  L.push("Generated: " + new Date().toISOString());
+  L.push("Requirements satisfied: " + totalDone() + " of " + TOTAL_REQS);
+  L.push("");
+  const refs = Object.entries(job.refs).filter(([,v])=>v && v.trim());
+  if (refs.length){
+    L.push("## Record references");
+    L.push("");
+    for (const [sid,v] of refs){
+      const st = STAGES.flatMap(s=>s.steps).find(s=>s.id===sid);
+      L.push("- " + (st && st.ref ? st.ref.label : sid) + ": " + v);
+    }
+    L.push("");
+  }
+  for (const stage of STAGES){
+    const total = stepReqCount(stage), done = stageDoneReqs(stage);
+    L.push("## Stage " + stage.id + " — " + stage.title);
+    L.push("");
+    L.push(stage.iso + " · " + done + "/" + total + " requirements · " + (stageComplete(stage) ? "GATE CLOSED" : "open"));
+    L.push("");
+    for (const step of stage.steps){
+      const ss = stepState(step.id);
+      const mark = stepComplete(step) ? "x" : " ";
+      let line = "- [" + mark + "] " + step.id + " " + step.title;
+      if (ss.done && ss.doneAt) line += "  _(completed " + ss.doneAt.slice(0,10) + (ss.doneBy ? " by " + ss.doneBy : "") + ")_";
+      L.push(line);
+      step.req.forEach((r,i) => {
+        L.push("    - [" + (ss.items[i] ? "x" : " ") + "] " + r.replace(/<[^>]+>/g, ""));
+      });
+    }
+    L.push("");
+  }
+  L.push("---");
+  L.push("");
+  L.push("<!-- PR-WKF-01 machine state — keep this block to re-import this record -->");
+  L.push("");
+  L.push("```json");
+  L.push(JSON.stringify({ app:"PR-WKF-01", version:1, job:{
+    id: job.id, title: job.title, client: job.client || "", device: job.device || "",
+    createdAt: job.createdAt, updatedAt: job.updatedAt, state: job.state, refs: job.refs
+  }}, null, 1));
+  L.push("```");
+  L.push("");
+  return L.join("\n");
+}
+function slug(v){
+  return String(v||"").trim()
+    .replace(/[\\/:*?"<>|]+/g, " ")
+    .replace(/\s+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+function exportName(){
+  const d = new Date();
+  const date = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  const client = slug(job.client);
+  return [date, client, job.id].filter(Boolean).join("_") + "_PR-WKF-01.md";
+}
+async function exportRecord(){
+  if (!job.client) {
+    bar("This job has no client name yet, so the file cannot be named after one. Add it now?", [
+      { label:"Add client", kind:"primary", run:openJobEditor },
+      { label:"Export anyway", run:() => doExport() }
+    ]);
+    return;
+  }
+  doExport();
+}
+async function doExport(){
+  const md = buildRecord();
+  const name = exportName();
+  const dl = await useCap("downloads");
+  if (dl) {
+    try { await dl.save({ filename:name, data:md }); return; }
+    catch(e){
+      if (e && e.code === "declined") return;
+      if (e && (e.code === "rate_limited")) { note("A save prompt is already open — finish that one first."); return; }
+    }
+  }
+  if (saveViaAnchor(md, name)) return;
+  const w = window.open("", "_blank");
+  if (w) { w.document.write("<pre style='font:13px ui-monospace,monospace;white-space:pre-wrap;padding:20px'>" + esc(md) + "</pre>"); w.document.close(); }
+  else note("Could not save the file. Check that downloads are allowed for this page.");
+}
+function saveViaAnchor(text, name){
+  try {
+    const blob = new Blob([text], { type:"text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = name; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    return true;
+  } catch(e){ return false; }
+}
+
+/* ---------- import ---------- */
+function parseRecord(text){
+  const fence = text.match(/```json\s*([\s\S]*?)```/);
+  if (fence) { const o = tryJson(fence[1]); if (o) return o; }
+  const whole = tryJson(text); if (whole) return whole;
+  return parseMarkdown(text);
+}
+function tryJson(raw){
+  try {
+    const o = JSON.parse(raw);
+    if (o && o.job && o.job.state) return o.job;
+    if (o && o.state && typeof o.state === "object") return o;
+  } catch(e){}
+  return null;
+}
+function parseMarkdown(text){
+  const lines = text.split(/\r?\n/);
+  const stepRe = /^- \[( |x|X)\]\s+(\d+\.\d+)\s/;
+  const reqRe  = /^\s{2,}- \[( |x|X)\]\s/;
+  const state = {}; let cur = null, i = 0, id = null, title = null, client = null, device = null;
+  for (const ln of lines){
+    if (!id) { const j = ln.match(/^Job:\s*(\S+)/); if (j) id = j[1]; }
+    if (!client) { const cm = ln.match(/^Client:\s*(.+)$/); if (cm) client = cm[1].trim(); }
+    if (!device) { const dm = ln.match(/^Device \/ DUT:\s*(.+)$/); if (dm) device = dm[1].trim(); }
+    if (!title) { const t = ln.match(/^#\s+Workflow completion record\s+—\s+(.+)$/); if (t) title = t[1].trim(); }
+    const m = ln.match(stepRe);
+    if (m){ cur = m[2]; state[cur] = { items:{}, done: m[1].toLowerCase() === "x" }; i = 0; continue; }
+    const r = ln.match(reqRe);
+    if (cur && r){ if (r[1].toLowerCase() === "x") state[cur].items[i] = true; i++; }
+  }
+  if (!Object.keys(state).length) return null;
+  return { id: id || null, title: title || null, client: client || "", device: device || "", state, refs:{} };
+}
+function importFile(file){
+  const fr = new FileReader();
+  fr.onerror = () => bar("That file could not be read. Try exporting the record again.", [{label:"OK"}], true);
+  fr.onload = () => {
+    const parsed = parseRecord(String(fr.result || ""));
+    if (!parsed) {
+      bar("That file is not a PR-WKF-01 record — no step checkboxes or state block were found in it.", [{label:"OK"}], true);
+      return;
+    }
+    const incomingId = parsed.id || jobId;
+    const exists = jobs.some(j => j.id === incomingId);
+    const ticks = Object.values(parsed.state).reduce((a,st)=>a+Object.keys(st.items||{}).filter(k=>st.items[k]).length,0);
+    const summary = `<b>${esc(parsed.title || incomingId)}</b> — ${ticks} requirement${ticks===1?"":"s"} satisfied.`;
+    if (exists) {
+      bar(summary + ` A job with the ID <b>${esc(incomingId)}</b> is already here.`, [
+        { label:"Overwrite it", kind:"primary", run:() => applyImport(parsed, incomingId) },
+        { label:"Import as a copy", run:() => applyImport(parsed, newJobId(), true) },
+        { label:"Cancel" }
+      ]);
+    } else {
+      bar(summary + " Import it?", [
+        { label:"Import", kind:"primary", run:() => applyImport(parsed, incomingId) },
+        { label:"Cancel" }
+      ]);
+    }
+  };
+  fr.readAsText(file);
+}
+async function applyImport(parsed, targetId, asCopy){
+  const j = blankJob(targetId, (parsed.title && !asCopy) ? parsed.title : ((parsed.title || targetId) + (asCopy ? " (imported)" : "")));
+  j.createdAt = parsed.createdAt || j.createdAt;
+  j.client = parsed.client || "";
+  j.device = parsed.device || "";
+  if (!asCopy && (j.client || j.device)) j.title = jobTitleFrom(j.client, j.device, targetId);
+  j.state = JSON.parse(JSON.stringify(parsed.state || {}));
+  j.refs  = JSON.parse(JSON.stringify(parsed.refs  || {}));
+  job = j; jobId = targetId;
+  const row = jobs.find(x => x.id === targetId);
+  if (row) row.title = j.title; else jobs.unshift({ id:targetId, title:j.title, createdAt:j.createdAt });
+  view = { name:"master" };
+  localSave(); render();
+  if (db) { try { await db.doc("jobs/"+targetId).set(j); } catch(e){ note("Imported on this device — it could not be written to the shared store."); } }
+}
+
+/* ---------- delete ---------- */
+function askDeleteJob(){
+  bar(`Delete <b>${esc(job.title || job.id)}</b> and all of its recorded progress? This cannot be undone.`, [
+    { label:"Delete job", kind:"danger", run:doDeleteJob },
+    { label:"Cancel" }
+  ], true);
+}
+async function doDeleteJob(){
+  const gone = jobId;
+  jobs = jobs.filter(j => j.id !== gone);
+  if (db) { try { await db.doc("jobs/"+gone).delete(); } catch(e){ note("Removed here, but it could not be deleted from the shared store."); } }
+  if (jobs.length) { await switchJob(jobs[0].id); }
+  else {
+    const id = "JOB-" + new Date().getFullYear() + "-001";
+    job = blankJob(id, id); jobs = [{ id, title:id, createdAt:job.createdAt }]; jobId = id;
+    view = { name:"master" }; localSave(); render();
+    if (db) { try { await db.doc("jobs/"+id).set(job); } catch(e){} }
+  }
+  note("<b>Deleted.</b>&nbsp;" + esc(gone) + " has been removed.");
+}
+
+/* ============================ BOOT ============================ */
+(function boot(){
+  const l = localLoad();
+  who = (l && l.who) || "";
+  document.getElementById("who").value = who;
+  if (l && l.jobs && l.jobs.length && l.data && l.data[l.jobId]) {
+    jobs = l.jobs; jobId = l.jobId; job = normalize(l.data[l.jobId]);
+  } else {
+    const id = "JOB-" + new Date().getFullYear() + "-001";
+    job = blankJob(id, id); jobs = [{id, title:id, createdAt:job.createdAt}]; jobId = id;
+  }
+  render();
+
+  const lg = document.getElementById("cipherlogo");
+  if (lg && lg.getAttribute("src")) {
+    lg.addEventListener("load", () => { lg.hidden = false; document.getElementById("wordmark").hidden = true; });
+    lg.addEventListener("error", () => { lg.hidden = true; });
+  }
+
+  document.getElementById("newjob").addEventListener("click", createJob);
+  document.getElementById("renamejob").addEventListener("click", openJobEditor);
+  document.getElementById("jobsel").addEventListener("change", e => switchJob(e.target.value));
+  document.getElementById("who").addEventListener("input", e => { who = e.target.value; localSave(); });
+  document.getElementById("export").addEventListener("click", exportRecord);
+  document.getElementById("deletejob").addEventListener("click", askDeleteJob);
+  document.getElementById("import").addEventListener("click", () => document.getElementById("importfile").click());
+  document.getElementById("importfile").addEventListener("change", e => {
+    const f = e.target.files && e.target.files[0];
+    if (f) importFile(f);
+    e.target.value = "";
+  });
+
+  useCap("db").then(async d => {
+    if (!d) { note("<b>Saved on this device.</b>&nbsp;Shared storage is not available in this view, so progress stays in this browser. Export the record to keep a copy."); return; }
+    db = d;
+    try {
+      const snap = await db.collection("jobs").orderBy("createdAt","desc").limit(50).get();
+      const remote = snap.docs.map(x => { const v = x.data() || {}; return { id:x.id, title:v.title || x.id, createdAt:v.createdAt || "" }; });
+      if (remote.length) {
+        jobs = remote;
+        if (!remote.some(j => j.id === jobId)) { jobId = remote[0].id; }
+        const cur = await db.doc("jobs/"+jobId).get();
+        if (cur.exists) job = normalize(cur.data());
+      } else {
+        await db.doc("jobs/"+job.id).set(job);
+      }
+      localSave(); render();
+    } catch(e){
+      note("<b>Saved on this device.</b>&nbsp;The shared store could not be read just now; progress stays in this browser until it recovers.");
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

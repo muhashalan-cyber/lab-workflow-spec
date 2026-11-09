@@ -1,0 +1,1012 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>IoT Security Lab</title>
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/theme-tokens.css">
+<link rel="stylesheet" href="assets/panels.css">
+<link rel="stylesheet" href="assets/lab.css">
+
+<style>
+  /* Page-level fixes for running CipherOne's compiled panel CSS stand-alone. */
+  html.fi .fi-main {
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+  @media (min-width: 1024px) {
+    html.fi .fi-main {
+      padding-left: max(2rem, env(safe-area-inset-left, 0px));
+      padding-right: max(2rem, env(safe-area-inset-right, 0px));
+    }
+  }
+  @media (max-width: 1023px) {
+    html.fi #fi-main-sidebar { display: none; }
+    html.fi .fi-main-ctn { margin-inline-start: 0 !important; }
+    html.fi body.lab-nav-open #fi-main-sidebar {
+      display: flex; position: fixed; inset-block: 0; inset-inline-start: 0;
+      z-index: 40; width: min(18rem, 86vw);
+      box-shadow: 0 0 0 100vmax color-mix(in srgb, #000 40%, transparent);
+    }
+  }
+  /* Inline SVG icons already follow the theme; don't invert them with the bitmap icons. */
+  html.fi.dark .fi-c1-topbar-pill__icon:has(svg) { filter: none; }
+  html.fi.dark .lab-invert-dark { filter: invert(1) brightness(1.8); }
+  html.fi .fi-c1-brand-logo--dark { display: none; }
+  html.fi.dark .fi-c1-brand-logo--dark { display: block; }
+  html.fi.dark .fi-c1-brand-logo--light { display: none; }
+  [hidden] { display: none !important; }
+</style>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    root.classList.add('fi');
+    root.setAttribute('dir', 'ltr');
+    document.body.classList.add('fi-body', 'fi-panel-employee', 'fi-body-has-navigation',
+      'fi-body-has-sidebar-collapsible-on-desktop', 'fi-body-has-topbar');
+    var stored = null;
+    try { stored = localStorage.getItem('lab-theme'); } catch (e) {}
+    function resolve() {
+      if (stored === 'dark' || stored === 'light') return stored;
+      var attr = root.getAttribute('data-theme');
+      if (attr === 'dark' || attr === 'light') return attr;
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    window.__labApplyTheme = function () {
+      var mode = resolve();
+      root.classList.toggle('dark', mode === 'dark');
+      root.style.colorScheme = mode;
+      var label = document.getElementById('theme-label');
+      if (label) label.textContent = mode === 'dark' ? 'Dark mode' : 'Light mode';
+      var sun = document.getElementById('theme-sun'), moon = document.getElementById('theme-moon');
+      if (sun && moon) { sun.hidden = mode === 'dark'; moon.hidden = mode !== 'dark'; }
+    };
+    window.__labSetTheme = function (mode) {
+      stored = mode;
+      try { localStorage.setItem('lab-theme', mode); } catch (e) {}
+      window.__labApplyTheme();
+    };
+    window.__labApplyTheme();
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+        if (!stored) window.__labApplyTheme();
+      });
+    }
+  })();
+</script>
+
+<!-- ======================= TOPBAR ======================= -->
+<div class="fi-topbar-ctn">
+  <nav aria-label="Topbar" class="fi-topbar">
+    <div class="fi-c1-topbar-start">
+      <button type="button" class="fi-c1-sidebar-toggle" aria-label="Collapse sidebar">
+        <img src="icons/panel-left.svg" alt="" aria-hidden="true">
+      </button>
+      <span class="fi-c1-topbar-separator" aria-hidden="true"><img src="icons/separator.svg" alt=""></span>
+      <span class="fi-c1-greeting">Welcome, Muhannad!</span>
+    </div>
+
+    <div class="fi-topbar-end">
+      <a href="#" class="fi-icon-btn fi-c1-topbar-pill fi-c1-topbar-pill--icon" aria-label="User Guide">
+        <img src="icons/book-open.svg" class="fi-c1-topbar-pill__icon fi-c1-topbar-docs-icon" alt="" aria-hidden="true">
+      </a>
+      <button type="button" class="fi-icon-btn fi-c1-topbar-pill fi-c1-topbar-pill--icon" aria-label="Notifications">
+        <span class="fi-c1-topbar-pill__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1rem;height:1rem">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </span>
+      </button>
+      <div class="fi-c1-theme-switcher">
+        <button type="button" class="fi-c1-topbar-pill fi-c1-topbar-pill--theme" id="theme-toggle">
+          <span class="fi-c1-topbar-pill__icon">
+            <img src="icons/sun.svg" id="theme-sun" alt="" aria-hidden="true">
+            <img src="icons/moon.svg" id="theme-moon" alt="" aria-hidden="true" hidden>
+          </span>
+          <span class="fi-c1-topbar-pill__label" id="theme-label">Light mode</span>
+          <img src="icons/chevron-down.svg" class="fi-c1-topbar-pill__caret" alt="" aria-hidden="true">
+        </button>
+      </div>
+      <div class="fi-c1-locale-switcher">
+        <button type="button" class="fi-c1-topbar-pill">
+          <span class="fi-c1-topbar-pill__icon"><img src="icons/flag-group.svg" class="fi-c1-language-flag" alt="" aria-hidden="true"></span>
+          <span class="fi-c1-topbar-pill__label">English</span>
+          <img src="icons/chevron-down.svg" class="fi-c1-topbar-pill__caret" alt="" aria-hidden="true">
+        </button>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<div class="fi-layout">
+  <!-- ======================= SIDEBAR ======================= -->
+  <div id="fi-main-sidebar" class="fi-sidebar fi-main-sidebar fi-sidebar-open">
+    <div class="fi-sidebar-header-ctn">
+      <header class="fi-sidebar-header">
+        <div class="fi-sidebar-header-logo-ctn">
+          <a href="#">
+            <div style="height: 1.5rem;" class="fi-logo">
+              <img src="icons/cipher.svg" alt="CipherOne" class="fi-c1-brand-logo fi-c1-brand-logo--full fi-c1-brand-logo--light" width="80" height="16">
+              <img src="icons/cipher-on-dark.svg" alt="CipherOne" class="fi-c1-brand-logo fi-c1-brand-logo--full fi-c1-brand-logo--dark" width="80" height="16" aria-hidden="true">
+            </div>
+          </a>
+        </div>
+      </header>
+    </div>
+
+    <nav aria-label="Sidebar navigation" class="fi-sidebar-nav">
+      <ul class="fi-sidebar-nav-groups">
+
+        <li data-group-label="Platform" class="fi-sidebar-group">
+          <div class="fi-sidebar-group-btn"><span class="fi-sidebar-group-label">Platform</span></div>
+          <ul class="fi-sidebar-group-items">
+            <li class="fi-sidebar-item fi-sidebar-item-has-url">
+              <a href="#" class="fi-sidebar-item-btn">
+                <span class="fi-icon fi-size-lg fi-sidebar-item-icon"><img src="icons/dashboard.svg" alt="" aria-hidden="true" class="fi-c1-sidebar-icon"></span>
+                <span class="fi-sidebar-item-label">Dashboard</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <li data-group-label="Workspaces" class="fi-sidebar-group fi-active">
+          <div class="fi-sidebar-group-btn"><span class="fi-sidebar-group-label">Workspaces</span></div>
+          <ul class="fi-sidebar-group-items">
+
+            <li class="fi-sidebar-item fi-sidebar-item-has-active-child-items fi-sidebar-item-has-url fi-c1-sidebar-expandable fi-c1-sidebar-parent fi-sidebar-item-expanded" data-nav-parent>
+              <a href="#" role="button" class="fi-sidebar-item-btn" aria-expanded="true" aria-controls="nav-pentest" data-nav-toggle="nav-pentest">
+                <span class="fi-icon fi-size-lg fi-sidebar-item-icon"><img src="icons/penetration-testing.svg" alt="" aria-hidden="true" class="fi-c1-sidebar-icon"></span>
+                <span class="fi-sidebar-item-label">Penetration Testing</span>
+              </a>
+
+              <ul class="fi-sidebar-sub-group-items" id="nav-pentest">
+                <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Resource Calendar</span></a></li>
+                <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Engagements</span></a></li>
+                <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">RFI Submissions</span></a></li>
+                <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Vulnerability Library</span></a></li>
+                <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Tester skills</span></a></li>
+                <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Tester time off</span></a></li>
+
+                <!-- ============ NEW SECTION ============ -->
+                <li class="fi-sidebar-item fi-sidebar-item-has-active-child-items fi-sidebar-item-has-url fi-c1-sidebar-expandable fi-c1-sidebar-parent fi-sidebar-item-expanded" data-nav-parent>
+                  <a href="#" role="button" class="fi-sidebar-item-btn" aria-expanded="true" aria-controls="nav-iot-lab" data-nav-toggle="nav-iot-lab">
+                    <span class="fi-icon fi-size-lg fi-sidebar-item-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" style="width:1rem;height:1rem">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z" />
+                      </svg>
+                    </span>
+                    <span class="fi-sidebar-item-label">IoT Security Lab</span>
+                  </a>
+
+                  <ul class="fi-sidebar-sub-group-items" id="nav-iot-lab">
+                    <li class="fi-sidebar-item fi-sidebar-item-has-url" data-view-link="jobs"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Lab Jobs</span></a></li>
+                    <li class="fi-sidebar-item fi-sidebar-item-has-url fi-active" data-view-link="tracker"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Workflow Tracker</span></a></li>
+                    <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Method / Test Mapping</span></a></li>
+                    <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">IXIT Documents</span></a></li>
+                    <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Evidence Register</span></a></li>
+                    <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Deviations, QC &amp; Gaps</span></a></li>
+                    <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Reports</span></a></li>
+                    <li class="fi-sidebar-item fi-sidebar-item-has-url"><a href="#" class="fi-sidebar-item-btn"><span class="fi-sidebar-item-label">Nonconformities &amp; Complaints</span></a></li>
+                  </ul>
+                </li>
+                <!-- ========== end new section ========== -->
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li data-group-label="Resources" class="fi-sidebar-group">
+          <div class="fi-sidebar-group-btn"><span class="fi-sidebar-group-label">Resources</span></div>
+          <ul class="fi-sidebar-group-items">
+            <li class="fi-sidebar-item fi-sidebar-item-has-url">
+              <a href="#" class="fi-sidebar-item-btn">
+                <span class="fi-icon fi-size-lg fi-sidebar-item-icon"><img src="icons/book-open.svg" alt="" aria-hidden="true" class="fi-c1-sidebar-icon lab-invert-dark"></span>
+                <span class="fi-sidebar-item-label">CipherOne user guide</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="fi-c1-sidebar-user-footer">
+      <div class="fi-c1-sidebar-user-row">
+        <div class="fi-c1-sidebar-user-identity">
+          <img alt="Avatar of Muhannad Alshalan" class="fi-avatar fi-circular fi-size-md fi-user-avatar" src="icons/avatar.svg">
+          <span class="fi-c1-sidebar-user-details">
+            <span class="fi-c1-sidebar-user-name">Muhannad Alshalan</span>
+            <span class="fi-c1-sidebar-user-role">Employee</span>
+          </span>
+        </div>
+        <button type="button" class="fi-c1-sidebar-logout" aria-label="Sign out" title="Sign out">
+          <span class="fi-c1-sidebar-logout-icon" aria-hidden="true"><img src="icons/logout.svg" alt=""></span>
+        </button>
+      </div>
+      <a href="#" class="fi-c1-sidebar-cover">Away?</a>
+    </div>
+  </div>
+
+  <!-- ======================= MAIN ======================= -->
+  <div class="fi-main-ctn fi-main-ctn-sidebar-open" style="display:flex;opacity:1">
+    <main id="fi-main-content" tabindex="-1" class="fi-main fi-width-full">
+      <div class="fi-page">
+        <div class="fi-page-header-main-ctn">
+          <div class="fi-page-main">
+            <div class="fi-page-content">
+<div class="lab-page" id="view-tracker">
+  <nav class="lab-crumbs" aria-label="Breadcrumb">
+    <a href="#" data-goto="jobs">IoT Security Lab</a><span aria-hidden="true">/</span>
+    <a href="#" data-goto="jobs">Lab Jobs</a><span aria-hidden="true">/</span>
+    <span aria-current="page">JOB-2026-002</span>
+  </nav>
+  <div class="lab-toolbar">
+    <div>
+      <h1 class="lab-toolbar__title">JOB-2026-002 &mdash; Workflow Tracker</h1>
+      <p class="lab-toolbar__sub">PR-WKF-01 Job Runner rev 3.0 &mdash; 25 steps across 11 stages, 51 requirements, 9 gates. Tracker v3.0 supersedes the 42-sheet assessment workbook.</p>
+    </div>
+    <div class="lab-toolbar__actions">
+      <a class="lab-btn" href="#" data-goto="jobs"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg>All lab jobs</a>
+      <a class="lab-btn" href="#">Export tracker</a>
+      <a class="lab-btn lab-btn--primary" href="#">Close Gate 5</a>
+    </div>
+  </div>
+  <section class="lab-panel">
+    <div class="lab-panel__head"><h2 class="lab-panel__title">Job record</h2>
+      <span class="lab-pill lab-pill--active">Stage 5 of 9 &mdash; 12 of 25 steps complete</span></div>
+    <div class="lab-panel__body"><div class="lab-meta">
+      <div class="lab-meta__item"><span class="lab-meta__label">Job ID</span><span class="lab-meta__value">JOB-2026-002</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Contract review</span><span class="lab-meta__value">CR-2026-014</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Client</span><span class="lab-meta__value">Client B</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Classification / TLP</span><span class="lab-meta__value">TLP: AMBER+STRICT</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">DUT description</span><span class="lab-meta__value">Network camera</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Manufacturer / model</span><span class="lab-meta__value">Hikvision DS-2CD1153G0-I</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Firmware as received</span><span class="lab-meta__value">V5.7.21 build 230412</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Constrained device? (per ICS)</span><span class="lab-meta__value">No</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Standard basis</span><span class="lab-meta__value">ETSI EN 303 645 V2.1.1</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Test specification</span><span class="lab-meta__value">ETSI TS 103 701 V1.1.1</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Decision rule</span><span class="lab-meta__value">Simple acceptance, no guard band</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Statement of conformity basis</span><span class="lab-meta__value">Per provision, applicable methods only</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Responsible engineer</span><span class="lab-meta__value">M. Alshalan</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Technical reviewer</span><span class="lab-meta__value">Not assigned &mdash; blocks Gate 5</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Authorized signatory</span><span class="lab-meta__value">Not assigned</span></div>
+      <div class="lab-meta__item"><span class="lab-meta__label">Job status</span><span class="lab-meta__value">Testing</span></div>
+    </div></div>
+  </section>
+  <section class="lab-panel">
+    <div class="lab-panel__head"><h2 class="lab-panel__title">Job document set</h2><span class="lab-table__muted" style="font-size:.75rem">One set per DUT, each file from its controlled template</span></div>
+    <div class="lab-panel__body lab-panel__body--flush"><div class="lab-table-wrap"><table class="lab-table">
+      <thead><tr><th>Document</th><th>File</th><th>State</th><th>Covers</th></tr></thead><tbody>
+      <tr><td>IXIT &amp; DUT Identification</td><td class="lab-table__id">JOB-2026-002_IXIT_v1.0.docx</td><td><span class="lab-pill lab-pill--done">Approved 27 Oct 2026</span></td><td class="lab-table__muted">ETSI steps 1 and 3</td></tr>
+      <tr><td>ETSI Method / Test Mapping</td><td class="lab-table__id">JOB-2026-002_Mapping_rev1.2.xlsx</td><td><span class="lab-pill lab-pill--done">In use</span></td><td class="lab-table__muted">ETSI steps 2, 4, 5, 6, 8</td></tr>
+      <tr><td>Workflow Tracker</td><td class="lab-table__id">JOB-2026-002_Workflow_Tracker.xlsx</td><td><span class="lab-pill lab-pill--done">v3.0, current</span></td><td class="lab-table__muted">ISO/IEC 17025 control</td></tr>
+      <tr><td>IoT ETSI Assessment Report</td><td class="lab-table__id">Not created</td><td><span class="lab-pill lab-pill--todo">Due at stage 8</span></td><td class="lab-table__muted">ETSI step 9 / ISO 7.8</td></tr>
+      <tr><td>Process_Control.xlsx</td><td class="lab-table__id">Lab-wide &mdash; one file</td><td><span class="lab-pill lab-pill--done">Referenced by ID</span></td><td class="lab-table__muted">Contract_Review &middot; Job_Register &middot; QC_Activities &middot; NC_Work_Log &middot; Complaints_Log &middot; Reports_Index</td></tr>
+      </tbody></table></div></div>
+  </section>
+  <section class="lab-panel">
+    <div class="lab-panel__head"><h2 class="lab-panel__title">Stage progress</h2>
+      <div class="lab-progress" style="min-width:220px"><span class="lab-progress__track"><span class="lab-progress__fill" style="width:44%"></span></span><span class="lab-progress__value">4 of 9 gates passed</span></div></div>
+    <div class="lab-panel__body"><div class="lab-rail-wrap"><ol class="lab-rail">
+      <li class="lab-rail__step lab-rail__step--done"><span class="lab-rail__dot"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span class="lab-rail__num">01</span><span class="lab-rail__label">Intake</span></li>
+      <li class="lab-rail__step lab-rail__step--done"><span class="lab-rail__dot"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span class="lab-rail__num">02</span><span class="lab-rail__label">Job setup</span></li>
+      <li class="lab-rail__step lab-rail__step--done"><span class="lab-rail__dot"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span class="lab-rail__num">03</span><span class="lab-rail__label">DUT &amp; ICS</span></li>
+      <li class="lab-rail__step lab-rail__step--done"><span class="lab-rail__dot"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span class="lab-rail__num">04</span><span class="lab-rail__label">IXIT</span></li>
+      <li class="lab-rail__step lab-rail__step--current"><span class="lab-rail__dot"></span><span class="lab-rail__num">05</span><span class="lab-rail__label">Test plan</span></li>
+      <li class="lab-rail__step lab-rail__step--todo"><span class="lab-rail__dot"></span><span class="lab-rail__num">06</span><span class="lab-rail__label">Execution</span></li>
+      <li class="lab-rail__step lab-rail__step--todo"><span class="lab-rail__dot"></span><span class="lab-rail__num">07</span><span class="lab-rail__label">Review</span></li>
+      <li class="lab-rail__step lab-rail__step--todo"><span class="lab-rail__dot"></span><span class="lab-rail__num">08</span><span class="lab-rail__label">Report</span></li>
+      <li class="lab-rail__step lab-rail__step--todo"><span class="lab-rail__dot"></span><span class="lab-rail__num">09</span><span class="lab-rail__label">Closure</span></li>
+    </ol></div>
+    <div class="lab-split" style="margin-top:1rem">
+      <div class="lab-stat"><span class="lab-stat__value">12 of 25</span><span class="lab-stat__label">Steps complete</span></div>
+      <div class="lab-stat"><span class="lab-stat__value">2</span><span class="lab-stat__label">Open now (5.2, 10.2)</span></div>
+      <div class="lab-stat"><span class="lab-stat__value">2</span><span class="lab-stat__label">Set to N/A (stage 11)</span></div>
+      <div class="lab-stat"><span class="lab-stat__value">1</span><span class="lab-stat__label">Open nonconformity</span></div>
+    </div></div>
+  </section>
+  <div class="c1-alert c1-alert--warning" role="status">
+    <p class="c1-alert__title">Gate 5 is not passed, so stage 6 cannot begin</p>
+    <p class="c1-alert__body">Step 5.2 still needs the Technical Reviewer's approval of the test plan. RG-CMP-01 authorises one person for tester, reviewer and signatory on this job, so a deputy or external reviewer has to be recorded with <code>Can Perform Technical Review = Yes</code> first. Held as NC-2026-003 under stage 10.</p>
+  </div>
+  <section class="lab-panel">
+    <div class="lab-panel__head"><h2 class="lab-panel__title">Job stages</h2><span class="lab-table__muted" style="font-size:.75rem">Stages 1&ndash;9 run in order &middot; 10 and 11 are triggered at any time</span></div>
+    <div class="lab-panel__body"><div class="lab-stages">
+      <article class="lab-stage lab-stage--done">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="false">
+          <span class="lab-stage__num">01</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">Intake and contract review</span><span class="lab-stage__clause">ISO 7.1 · 4.1 · 4.2 · 6.6 &middot; 3 steps, 6 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--done">Gate 1 passed</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel" hidden>
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Decide whether the laboratory may and can take the work, on terms both sides understand. Nothing technical starts until this stage closes.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">PR-CTR-01</a>
+            <a class="lab-rec" href="#">CHK-CTR-01</a>
+            <a class="lab-rec" href="#">FR-COI-02</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">1.1</span>
+                <span class="lab-step__title">Register and screen the request</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">Log the request before any technical discussion, so the review has a start date and a reference. Anything outside SC-LAB-01 is excluded or subcontracted — it cannot be absorbed.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Request logged with date received, client, contact and the client's own reference; request document saved to <code>00_Contract</code></span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Scope checked against <code>SC-LAB-01</code>: out-of-scope items excluded, or subcontracting agreed with the client's written approval (<code>PR-EXT-01</code>)</span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>08 Oct 2026</b></span></div>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">1.2</span>
+                <span class="lab-step__title">Impartiality, confidentiality and capability</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">Ask specifically whether the laboratory or any assigned person designed, consulted on, sold or previously certified this DUT or its firmware. Check calibration against the planned job end, not today.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span><code>FR-COI-02</code> completed with prior involvement in this DUT, its firmware or the vendor explicitly checked; any risk recorded in <code>RG-RSK-01</code> with its mitigation, or the work declined</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span><code>FR-CONF-02</code> and <code>FR-CONF-01</code> on file; authorized person in <code>RG-CMP-01</code>, equipment in <code>RG-EQP-01</code> valid past the planned job end, and the required method all confirmed available</span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>09 Oct 2026</b></span></div>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">1.3</span>
+                <span class="lab-step__title">Contract, decision rule and authorization to test</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">Ambiguity written here is the single largest cause of dispute later. For security testing the authorization letter is what makes the testing lawful and bounded.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span><code>CHK-CTR-01</code> completed in full; DUT, versions, services, interfaces in and out of scope, environment, dates and deliverables documented; decision rule and statement-of-conformity basis agreed in writing (ISO 7.1.3)</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span><b>Written Authorization to Test</b> on file stating rules of engagement, interfaces and IP ranges, test window, whether destructive testing is permitted, data handling and escalation contact — and <code>CR-2026-XXX</code> logged with Decision = Accept</span></li>
+              </ul>
+              <div class="lab-step__ref"><label for="ref-1.3">Contract review ID</label><input id="ref-1.3" type="text" value="CR-2026-014" placeholder="CR-2026-001"></div>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>12 Oct 2026</b></span></div>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box lab-gate--passed">
+            <div class="lab-gate__head"><span class="lab-gate__label">Gate 1</span><span class="lab-pill lab-pill--done">Passed</span></div>
+            <span class="lab-gate__text">CR-2026-XXX exists, Decision = Accept, and the written Authorization to Test is filed in 00_Contract. Without all three, no technical work begins.</span>
+          </div>
+        </div>
+      </article>
+      <article class="lab-stage lab-stage--done">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="false">
+          <span class="lab-stage__num">02</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">Job setup and readiness</span><span class="lab-stage__clause">ISO 6.2 · 6.3 · 6.4 · 7.4 · 7.5 · 7.11 &middot; 3 steps, 6 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--done">Gate 2 passed</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel" hidden>
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Turn an accepted contract into a controlled job with people, equipment, item and records ready before anyone touches the device.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">PR-TR-01</a>
+            <a class="lab-rec" href="#">PR-ITEM-01</a>
+            <a class="lab-rec" href="#">PR-EQP-01</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">2.1</span>
+                <span class="lab-step__title">Open the job and the job file</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">The Job_Register row is the spine everything else hangs from.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span><code>JOB-2026-XXX</code> created in Process_Control &gt; Job_Register, linked to the CR ID, with Responsible Engineer, Technical Reviewer and Authorized Signatory named and dates set</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Job folder created to the <code>PR-TR-01</code> structure (<code>00_Contract</code> … <code>06_NC_Complaints</code>) and its path recorded</span></li>
+              </ul>
+              <div class="lab-step__ref"><label for="ref-2.1">Job ID</label><input id="ref-2.1" type="text" value="JOB-2026-002" placeholder="JOB-2026-001"></div>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>13 Oct 2026</b></span></div>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">2.2</span>
+                <span class="lab-step__title">People, item, equipment and environment</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">Competence is not a job title — it is the authority flags in RG-CMP-01 against the methods this job uses. Record the item as it actually arrived, including anything wrong with it.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Each role holder Active in <code>RG-CMP-01</code> with the right authority flag and the methods authorized; the Technical Reviewer is not the tester, or the deputy / external reviewer is recorded</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span><code>FR-ITEM-01A</code> completed with photographs, condition and any abnormality; client consulted if the item is unsuitable; item in controlled, segregated storage</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Equipment In Service with Next Due Date past the planned job end and fitness confirmed; bench, isolated test network (<code>PR-ENV-01</code>) and least-privilege job access (<code>RG-ACC-01</code>) in place</span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>14 Oct 2026</b></span></div>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">2.3</span>
+                <span class="lab-step__title">Create the job document set</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">One set per DUT and project, each file from its controlled template. Never reuse another job's copies.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Workflow tracker, <code>IXIT &amp; DUT Identification</code> (placed in <code>Test Report › [03] Forms</code>) and <code>Method / Test Mapping</code> copied from controlled templates, versioned under <code>PR-DOC-01</code>, recorded in <code>01 Job Record</code>; kick-off held on scope, roles, safety, confidentiality and evidence naming</span></li>
+              </ul>
+              <div class="lab-step__ref"><label for="ref-2.3">IXIT document version</label><input id="ref-2.3" type="text" value="JOB-2026-002_IXIT_v1.0" placeholder="JOB-2026-001_IXIT_v0.1"></div>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>15 Oct 2026</b></span></div>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box lab-gate--passed">
+            <div class="lab-gate__head"><span class="lab-gate__label">Gate 2</span><span class="lab-pill lab-pill--done">Passed</span></div>
+            <span class="lab-gate__text">JOB-2026-XXX is open, the job file exists, roles are authorized, the item and equipment are recorded as fit, and the three job documents exist with a version.</span>
+          </div>
+        </div>
+      </article>
+      <article class="lab-stage lab-stage--done">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="false">
+          <span class="lab-stage__num">03</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">DUT identification and the ICS</span><span class="lab-stage__clause">ETSI TS 103 701 Annex A · ISO 7.2 · 7.4 &middot; 2 steps, 4 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--done">Gate 3 passed</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel" hidden>
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Fix exactly what is being assessed, and establish which ETSI provisions apply to it. Every ICS Support value switches methods on or off — an ICS accepted without challenge produces a conformity statement resting on an unverified claim.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">IXIT doc §1–2</a>
+            <a class="lab-rec" href="#">Mapping G–I</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">3.1</span>
+                <span class="lab-step__title">Identify the DUT</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">§2 of the IXIT document is the unambiguous identification ISO 7.8.2 will require in the report. The constrained-device answer alone changes the applicability of several provisions.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>IXIT document §1 document control complete (standard, test specification, scope, methodology, project ID, prepared and reviewed by, classification, version, date); file named for the job in <code>Test Report › [03] Forms</code></span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>§2 complete: manufacturer, model, hardware revision, serial, MAC, firmware as received <b>and</b> at end of assessment, interfaces, management address, default credential source, companion app, supplied material — anything not supplied marked “Not provided” with the reason, never left blank</span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>17 Oct 2026</b></span></div>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">3.2</span>
+                <span class="lab-step__title">Obtain and challenge the ICS</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">This is an assessment activity, not an inbox task. Challenge anything the device's own description contradicts.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span><b>ICS Support (G)</b> returned Y / N / N-A for every method whose Conditions column states a condition, attributable to who declared it and when</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span><b>Applicable? (H)</b> set for all 63 methods with its basis in <b>(I)</b>; every N and N-A challenged against its condition and against §2; clarifications logged in tracker <code>06C</code> and closed</span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>19 Oct 2026</b></span></div>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box lab-gate--passed">
+            <div class="lab-gate__head"><span class="lab-gate__label">Gate 3</span><span class="lab-pill lab-pill--done">Passed</span></div>
+            <span class="lab-gate__text">Every conditional method carries an ICS Support value, every one of the 63 methods carries an applicability decision with its basis, and every N has been challenged and accepted by the laboratory.</span>
+          </div>
+        </div>
+      </article>
+      <article class="lab-stage lab-stage--done">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="false">
+          <span class="lab-stage__num">04</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">IXIT completion and adequacy review</span><span class="lab-stage__clause">ETSI TS 103 701 Annex B · ISO 7.2 · 7.5 · 7.11 &middot; 2 steps, 4 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--done">Gate 4 passed</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel" hidden>
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Collect the implementation detail the methods need, and confirm it is good enough to assess against. One entry per real thing — a single-entry IXIT silently collapses the assessment into one untraceable test.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">IXIT doc IXIT 1–29</a>
+            <a class="lab-rec" href="#">Mapping R</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">4.1</span>
+                <span class="lab-step__title">Collect the IXIT</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">Reject records that say “all interfaces are secured”. Every mechanism, component, interface, parameter and service gets its own row and its own ID. IXIT 1–29 are filled in the job copy of <code>IXIT_and_DUT_Identification_Template.docx</code>, in <code>Test Report › [03] Forms</code>.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Required IXIT tables identified from <b>Required IXIT Entries (R)</b> across every method with Applicable = Y</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>IXIT 1–29 completed in the job copy: one entry per mechanism keeping its template ID, information source recorded per entry, unused template rows deleted, and dependencies cross-referenced by ID (AuthMech → SecParam, ComMech → NetSecImpl, SoftServ → Intf, UpdMech → UpdProc)</span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>23 Oct 2026</b></span></div>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">4.2</span>
+                <span class="lab-step__title">Adequacy review and approval</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">Adequacy observations are part of the assessment record and may be reported. Missing information is an information gap — it is never an N/A.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Every entry checked against the fields column R asks for; entries that are vague, inconsistent or contradict §2 recorded in tracker <code>06C</code> with their effect on the verdict</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Consolidated clarification issued with owner and due date, responses re-reviewed and the gap rows closed; no required entry left empty; IXIT document approved at an issue version and recorded in tracker <code>04A</code></span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>27 Oct 2026</b></span></div>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box lab-gate--passed">
+            <div class="lab-gate__head"><span class="lab-gate__label">Gate 4</span><span class="lab-pill lab-pill--done">Passed</span></div>
+            <span class="lab-gate__text">Every IXIT entry named by an applicable method is present at entry-per-mechanism granularity, with its information source recorded, and the IXIT document is approved at an issue version.</span>
+          </div>
+        </div>
+      </article>
+      <article class="lab-stage lab-stage--current is-open">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="true">
+          <span class="lab-stage__num">05</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">Method selection and the test plan</span><span class="lab-stage__clause">ISO 7.2 · 7.7 &middot; 2 steps, 5 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--blocked">Gate 5 not passed</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel">
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Confirm the applicable methods are valid for this DUT, settle deviations in advance, and plan the work before anyone touches the device.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">PR-MET-01</a>
+            <a class="lab-rec" href="#">Mapping</a>
+            <a class="lab-rec" href="#">Tracker 06</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">5.1</span>
+                <span class="lab-step__title">Confirm the methods and settle deviations</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what">Methods are controlled documents — never edit a method's steps or acceptance criteria inside a job copy. A deviation authorized after the fact is a nonconformity, not a deviation.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Job copy taken from the current controlled mapping revision, with columns A–F, J, K, P and R untouched</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Verification evidence on first use for standard methods; modified or laboratory-developed methods validated and authorized under <code>PR-MET-01</code>, with the record in <code>05_Review_QC</code> before use</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Every applicable method has the IXIT entries column R names present and adequate; any departure from a method authorized in advance in tracker <code>06A</code> with its justification and its effect on the verdict</span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>29 Oct 2026</b></span></div>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">5.2</span>
+                <span class="lab-step__title">Plan the work and approve it</span>
+                <span class="lab-pill lab-pill--active">In progress</span>
+              </div>
+              <p class="lab-step__what">Testing does not start on a draft plan.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Test plan written: tester per method, equipment IDs, setup and network topology, schedule, evidence to capture and its naming convention, QC checks planned in tracker <code>06B</code> with an acceptance criterion each, and the safety and destructive-testing constraints from the Authorization to Test</span></li>
+                <li class="lab-check lab-check--pending"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm.75 4a.75.75 0 0 0-1.5 0v4c0 .284.16.544.415.67l2.5 1.25a.75.75 0 1 0 .67-1.34l-2.085-1.043V6Z" clip-rule="evenodd"/></svg></span><span>Plan approved by the Technical Reviewer and recorded with name and date in <code>01 Job Record</code></span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>M. Alshalan</b></span><span>Date: <b>open since 29 Oct</b></span></div>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box lab-gate--failed">
+            <div class="lab-gate__head"><span class="lab-gate__label">Gate 5</span><span class="lab-pill lab-pill--blocked">Not passed</span></div>
+            <span class="lab-gate__text">Applicability is complete for all 63 methods, verification or validation records exist for every method in use, deviations are authorized, and the Technical Reviewer has approved the plan.</span>
+          </div>
+        </div>
+      </article>
+      <article class="lab-stage lab-stage--todo">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="false">
+          <span class="lab-stage__num">06</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">Assessment execution and evidence</span><span class="lab-stage__clause">ISO 7.5 · 7.7 · 6.4 &middot; 3 steps, 6 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--todo">Not started</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel" hidden>
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Perform the assessment and produce records another competent person could re-create the result from. Work the loop: for each method with Applicable = Y, conceptual assessment first, then functional.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">Mapping L · O</a>
+            <a class="lab-rec" href="#">Tracker 05</a>
+            <a class="lab-rec" href="#">Tracker 06</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">6.1</span>
+                <span class="lab-step__title">Baseline the DUT and assess conceptually</span>
+                <span class="lab-pill lab-pill--todo">Not started</span>
+              </div>
+              <p class="lab-step__what">Every later observation is relative to the baseline, so capture it before you start. Write the reasoning, not just the conclusion.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>DUT baseline set and captured as evidence: factory reset or documented configuration, firmware version, network topology</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Conceptual assessment of the IXIT entries in column R against the acceptance criteria in column K, with the reasoning written in <b>Tester Notes (S)</b>; insufficient information recorded as a gap in tracker <code>06C</code></span></li>
+              </ul>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">6.2</span>
+                <span class="lab-step__title">Test the DUT and register the evidence</span>
+                <span class="lab-pill lab-pill--todo">Not started</span>
+              </div>
+              <p class="lab-step__what">An unrecorded deviation invalidates the result. Register each file once — never twice under two Evidence IDs, and never cite an unregistered artefact.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Functional assessment executed in the controlled setup using only <code>RG-EQP-01</code> equipment, with the IDs <b>actually</b> used recorded in tracker <code>03</code>; any unplanned deviation authorized in <code>06A</code>, or work stopped and <code>NC-2026-XXX</code> raised, before continuing</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Each evidence file registered once in tracker <code>05</code> with ID, type, description, location, SHA-256, date, collector, related method and IXIT IDs, confidentiality and retention; stored in <code>03_Evidence</code> under its Evidence ID</span></li>
+              </ul>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">6.3</span>
+                <span class="lab-step__title">Set the verdicts and run quality control</span>
+                <span class="lab-pill lab-pill--todo">Not started</span>
+              </div>
+              <p class="lab-step__what">The verdict comes from the acceptance criteria, not from impression. N-A traces to a declaration, never to missing information.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span><b>Verdict (Tester) (L)</b> set for every method with Applicable = Y, taken strictly from column K, with <b>Evidence ID(s) (O)</b> populated; N-A used only where it traces to the ICS, INCONCLUSIVE where information is missing and testing cannot resolve it</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Planned QC performed under <code>PR-QC-01</code> and logged in tracker <code>06B</code> and Process_Control &gt; QC_Activities; verdict counts entered per provision group in tracker <code>04B</code></span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box ">
+            <div class="lab-gate__head"><span class="lab-gate__label">Gate 6</span><span class="lab-pill lab-pill--todo">Not reached</span></div>
+            <span class="lab-gate__text">Every applicable method has a tester verdict, every verdict names at least one registered Evidence ID, every evidence file is registered once with a hash, and planned QC is logged.</span>
+          </div>
+        </div>
+      </article>
+      <article class="lab-stage lab-stage--todo">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="false">
+          <span class="lab-stage__num">07</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">Technical review</span><span class="lab-stage__clause">ISO 7.5 · 7.7 · 6.2 · 7.8.7 &middot; 2 steps, 5 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--todo">Not started</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel" hidden>
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Confirm independently that the records support the verdicts, before anything is reported. The reviewer did not perform the work.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">Mapping M · N</a>
+            <a class="lab-rec" href="#">Tracker 04</a>
+            <a class="lab-rec" href="#">Tracker 05</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">7.1</span>
+                <span class="lab-step__title">Confirm independence and completeness</span>
+                <span class="lab-pill lab-pill--todo">Not started</span>
+              </div>
+              <p class="lab-step__what"></p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Reviewer did not perform the work under review and holds Can Perform Technical Review = Yes in <code>RG-CMP-01</code></span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Every method with Applicable = Y carries a tester verdict; every Applicable = N has a basis in (I) that matches the ICS declaration in (G)</span></li>
+              </ul>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">7.2</span>
+                <span class="lab-step__title">Check traceability and correctness, then sign</span>
+                <span class="lab-pill lab-pill--todo">Not started</span>
+              </div>
+              <p class="lab-step__what">Traceability is what an assessor will test hardest: can any single verdict be followed back to a file with a hash? The Final Verdict column is what the report reproduces.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Every tested method names an Evidence ID that exists in tracker <code>05</code>; every file in <code>03_Evidence</code> is registered with a matching SHA-256; every IXIT entry a verdict rests on is in the approved IXIT document</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>No PASS the recorded evidence does not support; every deviation authorized in advance; every INCONCLUSIVE states what was missing and what would resolve it; equipment calibration valid on the test date; planned QC performed</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span><b>Verdict (Reviewer) (M)</b> and <b>Final Verdict (N)</b> set for every tested method, anything not accepted returned and re-reviewed; tracker <code>04</code> reconciliation reads OK; review record signed and stored in <code>05_Review_QC</code></span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box ">
+            <div class="lab-gate__head"><span class="lab-gate__label">Gate 7</span><span class="lab-pill lab-pill--todo">Not reached</span></div>
+            <span class="lab-gate__text">Every tested method carries a reviewer verdict and a Final Verdict, the tracker counts reconcile, and the reviewer has signed the review record in 05_Review_QC.</span>
+          </div>
+        </div>
+      </article>
+      <article class="lab-stage lab-stage--todo">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="false">
+          <span class="lab-stage__num">08</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">Reporting</span><span class="lab-stage__clause">ISO 7.8 &middot; 2 steps, 5 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--todo">Not started</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel" hidden>
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Report the results accurately, clearly and unambiguously, with a conformity statement that rests on the agreed decision rule.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">PR-REP-01</a>
+            <a class="lab-rec" href="#">Report template</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">8.1</span>
+                <span class="lab-step__title">Draft the report</span>
+                <span class="lab-pill lab-pill--todo">Not started</span>
+              </div>
+              <p class="lab-step__what">ISO 7.8.2 content is not negotiable, and a reader must be able to see what was not tested and why.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>ISO 7.8.2 content present: laboratory identity and where the work was performed, client, unambiguous item identification with hardware and firmware versions, dates of receipt and of testing, methods and any deviations or exclusions, results, the person authorizing the report, and the statement that results relate only to the items tested</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Results reported per provision with verdict, method applied and basis; Not Applicable provisions shown with their ICS justification; INCONCLUSIVE verdicts and material IXIT observations carried forward</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Decision rule applied and stated with the risk it accepts; the scope of the conformity statement stated; opinions and interpretations marked as such and issued only by authorized personnel; any subcontracted result and its provider identified</span></li>
+              </ul>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">8.2</span>
+                <span class="lab-step__title">Finalize, approve and issue</span>
+                <span class="lab-pill lab-pill--todo">Not started</span>
+              </div>
+              <p class="lab-step__what"></p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Every <code>{{...}}</code> placeholder replaced, Annex T deleted, §4 counts and figures taken from tracker <code>04</code>, and TLP and classification consistent on the cover, in the header and in the footer</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Checked against the reviewed records and signed by the Authorized Signatory; <code>REP-2026-XXX</code> logged in Process_Control &gt; Reports_Index; issued through the agreed channel with the transmittal recorded in <code>04_Report</code></span></li>
+              </ul>
+              <div class="lab-step__ref"><label for="ref-8.2">Report ID</label><input id="ref-8.2" type="text" value="" placeholder="REP-2026-001"></div>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box ">
+            <div class="lab-gate__head"><span class="lab-gate__label">Gate 8</span><span class="lab-pill lab-pill--todo">Not reached</span></div>
+            <span class="lab-gate__text">The report is signed by an Authorized Signatory, logged as REP-2026-XXX, and issued with the transmittal recorded.</span>
+          </div>
+        </div>
+      </article>
+      <article class="lab-stage lab-stage--todo">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="false">
+          <span class="lab-stage__num">09</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">Closure</span><span class="lab-stage__clause">ISO 7.4 · 7.11 · 8.4 · 8.6 &middot; 2 steps, 4 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--todo">Not started</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel" hidden>
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Return the item, secure the records, learn from the job and close it formally.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">PR-REC-CTRL-01</a>
+            <a class="lab-rec" href="#">PR-ITEM-01</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">9.1</span>
+                <span class="lab-step__title">Deal with the item and archive the records</span>
+                <span class="lab-pill lab-pill--todo">Not started</span>
+              </div>
+              <p class="lab-step__what"></p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Item returned, retained or disposed of exactly as agreed with action, date and recipient recorded; device restored or securely wiped where firmware or credentials were modified during testing</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Job file complete — IXIT document, mapping, tracker, test plan, evidence, review record, signed report and transmittal — archived under <code>PR-REC-CTRL-01</code> with the retention period applied and the backup verified</span></li>
+              </ul>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">9.2</span>
+                <span class="lab-step__title">Close down access and close the job</span>
+                <span class="lab-pill lab-pill--todo">Not started</span>
+              </div>
+              <p class="lab-step__what"></p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Job-specific access rights revoked in <code>RG-ACC-01</code> and recorded; client data held outside the archive securely deleted</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="6.25"/></svg></span><span>Client feedback requested and recorded, lessons fed into <code>RG-RSK-01</code> and <code>PR-MRV-01</code>, and Job_Register Status = Done with the End Date</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box ">
+            <div class="lab-gate__head"><span class="lab-gate__label">Gate 9</span><span class="lab-pill lab-pill--todo">Not reached</span></div>
+            <span class="lab-gate__text">Item disposed of as agreed, job file archived with retention applied, access revoked, Job_Register Status = Done.</span>
+          </div>
+        </div>
+      </article>
+      <p class="lab-stage__trigger" style="margin:.5rem 0 0">Triggered at any time</p>
+      <article class="lab-stage lab-stage--current is-open">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="true">
+          <span class="lab-stage__num">10</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">Nonconforming work</span><span class="lab-stage__clause">ISO 7.10 · 8.7 · 8.5 &middot; 2 steps, 3 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--open">Triggered &mdash; open</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel">
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Contain work that does not conform to this procedure or to the client's requirements, and decide what happens to the results. Can be triggered at any point in the job.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">PR-NC-01</a>
+            <a class="lab-rec" href="#">PR-CAP-01</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">10.1</span>
+                <span class="lab-step__title">Contain and decide</span>
+                <span class="lab-pill lab-pill--done">Complete</span>
+              </div>
+              <p class="lab-step__what"></p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span><code>NC-2026-XXX</code> recorded in Process_Control &gt; NC_Work_Log with its significance, the immediate action taken and the affected work held</span></li>
+                <li class="lab-check lab-check--done"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 5.29a.75.75 0 0 1 .006 1.06l-7.25 7.5a.75.75 0 0 1-1.08 0l-3.5-3.625a.75.75 0 1 1 1.08-1.04l2.96 3.066 6.71-6.945a.75.75 0 0 1 1.074-.016Z" clip-rule="evenodd"/></svg></span><span>Decision on the affected work taken and recorded; client informed and any issued report recalled or amended where it was affected</span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>Quality Manager</b></span><span>Date: <b>15 Oct 2026</b></span></div>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">10.2</span>
+                <span class="lab-step__title">Resume and correct</span>
+                <span class="lab-pill lab-pill--active">In progress</span>
+              </div>
+              <p class="lab-step__what"></p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--pending"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm.75 4a.75.75 0 0 0-1.5 0v4c0 .284.16.544.415.67l2.5 1.25a.75.75 0 1 0 .67-1.34l-2.085-1.043V6Z" clip-rule="evenodd"/></svg></span><span>Resumption of work authorized in writing; corrective action raised under <code>PR-CAP-01</code> where the nonconformity recurs or could recur, its reference recorded, and the NC closed with an outcome</span></li>
+              </ul>
+              <div class="lab-stage__foot" style="margin-top:.5rem"><span>Responsible: <b>Quality Manager</b></span><span>Date: <b>open</b></span></div>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box lab-gate--failed">
+            <div class="lab-gate__head"><span class="lab-gate__label">Closing condition</span><span class="lab-pill lab-pill--open">Open</span></div>
+            <span class="lab-gate__text">The decision on affected work is recorded, the client has been informed where a report was affected, resumption is authorized in writing, and the NC is closed with an outcome.</span>
+          </div>
+        </div>
+      </article>
+      <article class="lab-stage lab-stage--todo lab-stage--na">
+        <button type="button" class="lab-stage__btn" data-stage-toggle aria-expanded="false">
+          <span class="lab-stage__num">11</span>
+          <span class="lab-stage__titles"><span class="lab-stage__name">Complaints</span><span class="lab-stage__clause">ISO 7.9 &middot; 2 steps, 3 requirements</span></span>
+          <span class="lab-stage__right"><span class="lab-pill lab-pill--todo">Not triggered</span><svg class="lab-stage__caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span>
+        </button>
+        <div class="lab-stage__panel" hidden>
+          <div class="lab-stage__panel-inner">
+            <p class="lab-purpose">Handle a complaint about the laboratory's activities, with the investigation and the decision taken by people who were not involved in the work complained of.</p>
+          </div>
+          <div class="lab-docs"><span class="lab-docs__label">Controlled documents</span>
+            <a class="lab-rec" href="#">PR-COM-01</a>
+          </div>
+          <div class="lab-steps">
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">11.1</span>
+                <span class="lab-step__title">Receive and validate</span>
+                <span class="lab-pill lab-pill--todo">N/A</span>
+              </div>
+              <p class="lab-step__what">Gathering and verifying the information needed to validate the complaint is the laboratory's responsibility, not the complainant's.</p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg></span><span><code>CMP-2026-XXX</code> logged in Process_Control &gt; Complaints_Log and receipt acknowledged; confirmed whether it relates to laboratory activities the lab is responsible for, with out-of-scope complaints closed in writing with an explanation</span></li>
+              </ul>
+            </div>
+            <div class="lab-step">
+              <div class="lab-step__head">
+                <span class="lab-step__id">11.2</span>
+                <span class="lab-step__title">Investigate, decide and close</span>
+                <span class="lab-pill lab-pill--todo">N/A</span>
+              </div>
+              <p class="lab-step__what"></p>
+              <ul class="lab-step__reqs">
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg></span><span>Investigated by someone not involved in the original work (ISO 7.9.5); job file, tracker, mapping, IXIT document, evidence, review record and report examined; <code>NC-2026-XXX</code> raised where nonconforming work is confirmed</span></li>
+                <li class="lab-check lab-check--todo"><span class="lab-check__icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg></span><span>Decision made, reviewed and approved by person(s) not involved in the original activity (ISO 7.9.6); outcome and formal notice of closure communicated to the complainant and recorded</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="lab-gate lab-gate--box ">
+            <div class="lab-gate__head"><span class="lab-gate__label">Closing condition</span><span class="lab-pill lab-pill--todo">Not triggered</span></div>
+            <span class="lab-gate__text">The outcome is decided by person(s) not involved in the original activity, communicated formally to the complainant, and the complaint is closed.</span>
+          </div>
+        </div>
+      </article>
+    </div></div>
+  </section>
+  <section class="lab-panel">
+    <div class="lab-panel__head"><h2 class="lab-panel__title">ETSI verdict roll-up</h2><span class="lab-table__muted" style="font-size:.75rem">Tracker sheet 04 &middot; the only source for the counts in report &sect;4</span></div>
+    <div class="lab-panel__body lab-panel__body--flush"><div class="lab-table-wrap"><table class="lab-table lab-rollup">
+      <thead><tr><th>Clause</th><th>Provision group</th><th class="is-num">In library</th><th class="is-num">Applicable</th><th class="is-num">PASS</th><th class="is-num">FAIL</th><th class="is-num">INCONCLUSIVE</th><th class="is-num">N/A</th><th class="is-num">NOT TESTED</th></tr></thead><tbody>
+      <tr><td class="lab-table__id">5.1</td><td>No universal default passwords</td><td class="is-num">5</td><td class="is-num">5</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">5</td></tr>
+      <tr><td class="lab-table__id">5.2</td><td>Implement a means to manage reports of vulnerabilities</td><td class="is-num">3</td><td class="is-num">3</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">3</td></tr>
+      <tr><td class="lab-table__id">5.3</td><td>Keep software updated</td><td class="is-num">16</td><td class="is-num">13</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">3</td><td class="is-num lab-table__muted">13</td></tr>
+      <tr><td class="lab-table__id">5.4</td><td>Securely store sensitive security parameters</td><td class="is-num">4</td><td class="is-num">4</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">4</td></tr>
+      <tr><td class="lab-table__id">5.5</td><td>Communicate securely</td><td class="is-num">8</td><td class="is-num">7</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">1</td><td class="is-num lab-table__muted">7</td></tr>
+      <tr><td class="lab-table__id">5.6</td><td>Minimize exposed attack surfaces</td><td class="is-num">9</td><td class="is-num">8</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">1</td><td class="is-num lab-table__muted">8</td></tr>
+      <tr><td class="lab-table__id">5.7</td><td>Ensure software integrity</td><td class="is-num">2</td><td class="is-num">1</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">1</td><td class="is-num lab-table__muted">1</td></tr>
+      <tr><td class="lab-table__id">5.8</td><td>Ensure that personal data is secure</td><td class="is-num">3</td><td class="is-num">3</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">3</td></tr>
+      <tr><td class="lab-table__id">5.9</td><td>Make systems resilient to outages</td><td class="is-num">3</td><td class="is-num">2</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">1</td><td class="is-num lab-table__muted">2</td></tr>
+      <tr><td class="lab-table__id">5.10</td><td>Examine system telemetry data</td><td class="is-num">1</td><td class="is-num">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">1</td><td class="is-num lab-table__muted">0</td></tr>
+      <tr><td class="lab-table__id">5.11</td><td>Make it easy for users to delete user data</td><td class="is-num">4</td><td class="is-num">4</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">4</td></tr>
+      <tr><td class="lab-table__id">5.12</td><td>Make installation and maintenance of devices easy</td><td class="is-num">3</td><td class="is-num">3</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">3</td></tr>
+      <tr><td class="lab-table__id">5.13</td><td>Validate input data</td><td class="is-num">1</td><td class="is-num">1</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">1</td></tr>
+      <tr><td class="lab-table__id">&mdash;</td><td>SCA / FI screening (scheme-defined)</td><td class="is-num">1</td><td class="is-num">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">0</td><td class="is-num lab-table__muted">1</td><td class="is-num lab-table__muted">0</td></tr>
+      </tbody><tfoot><tr><td></td><td>Total</td><td class="is-num">63</td><td class="is-num">54</td><td class="is-num">0</td><td class="is-num">0</td><td class="is-num">0</td><td class="is-num">9</td><td class="is-num">54</td></tr></tfoot>
+    </table></div>
+    <div style="padding:.75rem 1rem;font-size:.75rem" class="lab-table__muted">Applicability was fixed at Gate 3; verdicts are set at Gate 6, so every applicable method still reads NOT TESTED. Reconciliation must read <b>OK &mdash; applicable = pass + fail + inconclusive + not tested</b> before the report is issued.</div>
+    </div>
+  </section>
+</div>
+<div class="lab-page" id="view-jobs" hidden>
+  <nav class="lab-crumbs" aria-label="Breadcrumb"><a href="#">IoT Security Lab</a><span aria-hidden="true">/</span><span aria-current="page">Lab Jobs</span></nav>
+  <div class="lab-toolbar">
+    <div><h1 class="lab-toolbar__title">Lab Jobs (3)</h1>
+    <p class="lab-toolbar__sub">One tracker per job, PR-WKF-01 rev 3.0. The stage shown is the furthest stage whose gate has not yet passed.</p></div>
+    <div class="lab-toolbar__actions"><a class="lab-btn lab-btn--primary" href="#">New lab job</a></div>
+  </div>
+  <section class="lab-panel"><div class="lab-panel__body lab-panel__body--flush"><div class="lab-table-wrap"><table class="lab-table">
+    <thead><tr><th>Job</th><th>Status</th><th>Client</th><th>Device under test</th><th>Current stage</th><th>Gate</th><th>Steps</th><th>Engineer</th><th>Report due</th></tr></thead><tbody>
+      <tr><td class="lab-table__id">JOB-2026-001</td><td><span class="lab-pill lab-pill--done">Completed</span></td><td>Client A</td><td>Smart door lock</td><td>09 &mdash; Closure</td><td><span class="lab-pill lab-pill--done">Gate 9 passed</span></td><td class="lab-table__muted">25 of 25</td><td class="lab-table__muted">M. Alshalan</td><td class="lab-table__muted">03 Sep 2026</td></tr>
+      <tr class="is-clickable" data-goto="tracker"><td class="lab-table__id">JOB-2026-002</td><td><span class="lab-pill lab-pill--active">Testing</span></td><td>Client B</td><td>Hikvision DS-2CD1153G0-I</td><td>05 &mdash; Method selection and the test plan</td><td><span class="lab-pill lab-pill--blocked">Gate 5 not passed</span></td><td class="lab-table__muted">12 of 25</td><td class="lab-table__muted">M. Alshalan</td><td class="lab-table__muted">26 Nov 2026</td></tr>
+      <tr><td class="lab-table__id">JOB-2026-003</td><td><span class="lab-pill lab-pill--todo">In review</span></td><td>Client C</td><td>Wi-Fi smart plug</td><td>01 &mdash; Intake and contract review</td><td><span class="lab-pill lab-pill--todo">Gate 1 open</span></td><td class="lab-table__muted">2 of 25</td><td class="lab-table__muted">Unassigned</td><td class="lab-table__muted">&mdash;</td></tr>
+    </tbody></table></div></div></section>
+  <p class="lab-table__muted" style="font-size:.75rem;margin:0">Open JOB-2026-002 to see the stage tracker.</p>
+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  (function () {
+    // Theme pill
+    var toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var isDark = document.documentElement.classList.contains('dark');
+        window.__labSetTheme(isDark ? 'light' : 'dark');
+      });
+    }
+
+    // Sidebar parents expand and collapse in place
+    document.querySelectorAll('[data-nav-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var item = btn.closest('[data-nav-parent]');
+        var list = document.getElementById(btn.getAttribute('data-nav-toggle'));
+        var open = item.classList.toggle('fi-sidebar-item-expanded');
+        btn.setAttribute('aria-expanded', String(open));
+        if (list) list.hidden = !open;
+      });
+    });
+
+    // Collapsed-rail toggle
+    window.__labApplyTheme();
+
+    var railBtn = document.querySelector('.fi-c1-sidebar-toggle');
+    if (railBtn) {
+      railBtn.addEventListener('click', function () {
+        if (window.matchMedia('(max-width: 1023px)').matches) {
+          document.body.classList.toggle('lab-nav-open');
+          return;
+        }
+        var sidebar = document.getElementById('fi-main-sidebar');
+        var open = sidebar.classList.toggle('fi-sidebar-open');
+        document.querySelector('.fi-main-ctn').classList.toggle('fi-main-ctn-sidebar-open', open);
+        railBtn.setAttribute('aria-label', open ? 'Collapse sidebar' : 'Expand sidebar');
+      });
+    }
+    document.addEventListener('click', function (e) {
+      if (!document.body.classList.contains('lab-nav-open')) return;
+      if (e.target.closest('#fi-main-sidebar') || e.target.closest('.fi-c1-sidebar-toggle')) return;
+      document.body.classList.remove('lab-nav-open');
+    });
+
+    // Stage accordions
+    document.querySelectorAll('[data-stage-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var stage = btn.closest('.lab-stage');
+        var panel = stage.querySelector('.lab-stage__panel');
+        var open = !stage.classList.contains('is-open');
+        stage.classList.toggle('is-open', open);
+        panel.hidden = !open;
+        btn.setAttribute('aria-expanded', String(open));
+      });
+    });
+
+    // Two views: jobs list and job tracker
+    var views = { jobs: document.getElementById('view-jobs'), tracker: document.getElementById('view-tracker') };
+    function show(name) {
+      Object.keys(views).forEach(function (k) { views[k].hidden = k !== name; });
+      document.querySelectorAll('[data-view-link]').forEach(function (li) {
+        li.classList.toggle('fi-active', li.getAttribute('data-view-link') === name);
+      });
+      if (location.hash.replace('#', '') !== name) history.replaceState(null, '', '#' + name);
+      document.getElementById('fi-main-content').scrollTop = 0;
+      window.scrollTo(0, 0);
+    }
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest('[data-goto], [data-view-link]');
+      if (!el) return;
+      var name = el.getAttribute('data-goto') || el.getAttribute('data-view-link');
+      if (!views[name]) return;
+      e.preventDefault();
+      show(name);
+    });
+    var initial = location.hash.replace('#', '');
+    show(views[initial] ? initial : 'tracker');
+    window.addEventListener('hashchange', function () {
+      var n = location.hash.replace('#', '');
+      if (views[n]) show(n);
+    });
+  })();
+</script>
