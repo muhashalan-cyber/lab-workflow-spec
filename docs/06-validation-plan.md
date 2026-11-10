@@ -25,6 +25,11 @@ is why the tests matter more here than in an ordinary project.
      `ALTER TABLE ... DISABLE TRIGGER` and `DROP TRIGGER` on `audit_log` fail. Testing
      only that the trigger fires proves nothing: the table's owner can disable it.
    - A passed gate locks its stage; reopening requires a reason and writes an amendment.
+   - **No audit row exists with a null actor.** Check every row, not a sample — the gap
+     appears in bootstrap writes that happen before an actor is established, so a tail
+     sample passes while the table is already contaminated. A write with no actor must
+     throw rather than record null.
+   - A gate with an unimplemented rule reads Unevaluable, not Passed.
 4. **Identifier allocation.** No duplicate or reused job, evidence, report, NC or
    complaint identifiers, including under concurrent creation. Run it in parallel.
 5. **Arithmetic.** The roll-up reconciles

@@ -649,5 +649,17 @@
    "attestations": [],
    "note": "Not a sequence gate. Independence is enforced on save, not only at closure."
   }
- ]
+ ],
+ "evaluation_contract": {
+  "fail_closed": "A rule whose predicate is not implemented marks the gate Unevaluable, never Passed.",
+  "states": [
+   "Not reached",
+   "Open",
+   "Not passed",
+   "Unevaluable",
+   "Passed"
+  ],
+  "attestations": "Signed separately from machine rules and never rendered as checks. A gate with all machine rules satisfied but an unsigned attestation does not pass.",
+  "blocked_reasons": "Each failing rule contributes its id and failure message, so a blocked gate names conditions rather than reporting a generic failure."
+ }
 }

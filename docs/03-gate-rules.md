@@ -38,6 +38,13 @@ that triggers re-validation of that case — which is what ISO 7.11.2 expects.
 **Never render an attestation as a check.** The UI must distinguish "the system verified
 this" from "a named person asserted this at a timestamp".
 
+**Gates fail closed.** A rule whose predicate is not implemented yet marks the gate
+`Unevaluable` — never Passed, and never silently skipped. A gate that passes because
+nobody has written its check is worse than one that blocks, because the record then
+asserts a control that was never applied. `Unevaluable` is distinct from `Not passed`:
+one says a condition failed, the other says a condition could not be judged, and an
+assessor will care which.
+
 ---
 
 ## Gate 1 — Intake and contract review
@@ -204,8 +211,6 @@ cannot verify the first two — see the limitation in `01-requirements.md`.*
 6. For every method with a verdict, the equipment used was calibration-valid on the
    recorded test date (`job_equipment.calibration_valid_to >= verdict date`).
 7. Every planned QC activity has been performed.
-8. Stage 7 requirements all Complete or N/A, and a signature exists.
-
 8. Stage 7 requirements all Complete or N/A, and a signature exists.
 9. **Test group verdicts are derived for every provision claimed Yes**, per TS 103 701
    Table 2 (see below).

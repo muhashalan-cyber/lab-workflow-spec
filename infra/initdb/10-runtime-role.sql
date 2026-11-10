@@ -9,12 +9,20 @@
 --   owner role   = ${DB_USERNAME}     -> owns the schema, runs migrations only
 --   runtime role = ${DB_APP_USERNAME} -> what the app, worker and scheduler connect as
 
+-- psql does NOT import environment variables as psql variables. Pull them in through
+-- a shell command, and use psql's own built-in :DBNAME for the current database --
+-- :"POSTGRES_DB" is not set and raises a syntax error. An earlier revision of this file
+-- made that mistake, and it failed SILENTLY: ON_ERROR_STOP aborted the rest of the file
+-- while the container still reported healthy, two spot checks still read true because
+-- PUBLIC holds CONNECT and USAGE by default, and Postgres prints "Skipping
+-- initialization" on every later start, so it never retries. Verify this file ran by
+-- checking for the guard function and the default ACL entries, not by the role existing.
 \set app_user `echo "$DB_APP_USERNAME"`
 \set app_pass `echo "$DB_APP_PASSWORD"`
 
 CREATE ROLE :"app_user" LOGIN PASSWORD :'app_pass';
 
-GRANT CONNECT ON DATABASE :"POSTGRES_DB" TO :"app_user";
+GRANT CONNECT ON DATABASE :"DBNAME" TO :"app_user";
 GRANT USAGE ON SCHEMA public TO :"app_user";
 
 -- Default privileges for tables the owner creates later, during migration.

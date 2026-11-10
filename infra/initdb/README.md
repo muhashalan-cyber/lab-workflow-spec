@@ -33,3 +33,18 @@ DROP TRIGGER audit_log_no_delete ON audit_log;
 ```
 
 If any succeeds, the audit trail is not immutable and validation case 3 fails.
+
+## Confirm this file actually ran
+
+It can fail silently: `ON_ERROR_STOP` aborts the remainder, the container still reports
+healthy, and Postgres prints "Skipping initialization" on every later start rather than
+retrying. The role existing proves nothing, and `CONNECT`/`USAGE` read true for PUBLIC by
+default. Check the two things only this file creates:
+
+```sql
+SELECT proname FROM pg_proc WHERE proname = 'audit_log_is_append_only';   -- 1 row
+SELECT count(*) FROM pg_default_acl;                                      -- 2 entries
+```
+
+Neither present means the file aborted. Wipe the volume and re-run; a half-initialised
+database is not a base to build a record system on.

@@ -28,9 +28,18 @@ exact statements the migration must end with and the five-statement proof.
 dependency and must be required and installed, and that serving through FrankenPHP's own
 Caddy config without Octane is an equally valid choice.
 
-**4. Healthcheck would have deadlocked the stack.** `curl` is not in the Alpine
-FrankenPHP image, so the healthcheck could never pass, and proxy, worker and scheduler all
-wait on `app: service_healthy`. The Dockerfile now installs curl.
+**4. Healthcheck — the finding was wrong, and so was this entry.** The review predicted
+that `curl` was absent from the Alpine FrankenPHP image and would deadlock the stack on
+`app: service_healthy`. It flagged the prediction as unverified, then retracted it after
+building: **curl is present** at `/usr/bin/curl`, confirmed on both tags and in the built
+image. This entry originally recorded the prediction as fact, which was a false statement
+in what is becoming the controlled record of why decisions were made. Corrected 10 Nov
+2026 after a second build session re-verified it. The Dockerfile still installs curl
+explicitly, as insurance rather than as a fix.
+
+A real defect did surface in the same area: the FrankenPHP base image ships its own
+healthcheck polling Caddy's admin port, which `worker` and `scheduler` inherit and can
+never satisfy, leaving both permanently in "starting". Disabled for those two services.
 
 **5. Compose build context.** `context: ..` resolves to a directory with no
 `composer.json` while `infra/` lives in the spec repo. Noted in the compose file and the
@@ -71,6 +80,13 @@ running its test cases when third-party evidence is adequate, with the laborator
 recording its examination of scope, test depth and coverage. Flagged in
 `docs/03-gate-rules.md` as a v1 gap, not built.
 
+## Corrections to this document
+
+This file is part of the record. When an entry in it turns out to be wrong, it is
+corrected in place with the date and the reason, not quietly deleted — the same way an
+amended technical record works under ISO/IEC 17025 7.5.2. Item 4 was corrected on
+10 November 2026. The git history holds the previous wording.
+
 ## Not changed
 
 **The method library stays at rev 1.2.** The session's reasoning is right: a job pins its
@@ -79,3 +95,54 @@ becomes a new revision row rather than a rewrite. Open question 4 stands.
 
 **The version decision stays open.** The brief's fallback applies only once CipherOne has
 genuinely been checked. See the reply in the conversation for the recommendation.
+
+---
+
+# Response to the slice-proof review — 11 November 2026
+
+The build session proved the vertical slice, found a broken file in this package, and
+found a gap in its own work. Changes made here:
+
+**`infra/initdb/10-runtime-role.sql` was broken and failed silently.** It used
+`:"POSTGRES_DB"`, but psql does not import environment variables as psql variables. The
+syntax error aborted the rest of the file under `ON_ERROR_STOP`, so `ALTER DEFAULT
+PRIVILEGES` and the guard function never ran — while the container still reported healthy,
+two spot checks read true because PUBLIC holds CONNECT and USAGE by default, and Postgres
+printed "Skipping initialization" on every later start rather than retrying. Corrected to
+psql's built-in `:"DBNAME"`, with the trap documented in the file and a verification step
+added to `infra/initdb/README.md` that checks for the guard function and the default ACL
+entries rather than for the role.
+
+**Item 4 above was a false statement and has been corrected in place.** See *Corrections
+to this document*.
+
+**Audit rows must name an actor.** The session found that 4 of 204 audit rows had a null
+actor — bootstrap writes made before an actor was established — and that its own check had
+passed only because it sampled the tail. Nothing in the design forced attribution.
+`actor_id` is now NOT NULL at the column, a missing actor must throw, and genuine
+bootstrap writes go through an explicit `actingAsSystem()` attributing to a named system
+principal. Validation case 3 now requires every row to be checked, not a sample. This
+matters more than its size suggests: the table is append-only, so an unattributed row can
+never be repaired, and ISO/IEC 17025 7.5.2 requires the actor to be identifiable.
+
+**Gates fail closed, and `Unevaluable` is now a state.** The session made an unimplemented
+predicate mark a gate unevaluable rather than passed. That is better than this package
+specified and is now the required behaviour, recorded in `gates.json` under
+`evaluation_contract` and in the gate state list. A gate that passes because nobody wrote
+its check asserts a control that was never applied.
+
+**`job_provision_verdicts` has no history twin**, by design — it is derived from
+`job_methods` and re-derivable. Recorded so a later reader does not "fix" it.
+
+**`failed_jobs` and `job_batches` stay at Laravel's names.** Only `jobs` collides. The
+earlier parenthetical suggesting all three be renamed traded config surface for cosmetic
+consistency and has been withdrawn.
+
+**Minor:** gate 7's rule 8 was listed twice in `docs/03-gate-rules.md`. De-duplicated.
+`gates.json` was already clean.
+
+## Not changed
+
+**No Filament UI exists yet**, and slice item 3 says the steps and requirements should
+"render and save". The session proved the save half and flagged the render half as not
+done rather than letting it read as complete. The slice stays open until a page exists.

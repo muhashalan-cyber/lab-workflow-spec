@@ -58,6 +58,7 @@
   "Not reached",
   "Open",
   "Not passed",
+  "Unevaluable",
   "Passed"
  ],
  "stage_gate_kind": [
@@ -67,6 +68,6 @@
  "_notes": {
   "verdict": "Sheet 07 lists five values, but they are not all test case verdicts. ETSI TS 103 701 Table 3 admits exactly three test case verdicts: PASS, FAIL, INCONCLUSIVE. 'N-A' is an ICS Support value (clause 4.4), carried on the row to mark a non-applicable method, and 'NOT TESTED' is a transient state that must be zero before gate 8. A method with applicable = 'Y' may only carry PASS, FAIL or INCONCLUSIVE.",
   "ics_support": "Per TS 103 701 clause 4.4: Y = claimed, N = applicable but not fulfilled (justification required), N-A = conditional provision the DUT cannot fulfil (justification required).",
-  "gate_state": "Taken from docs/02-data-model.md; not present in tracker sheet 07."
+  "gate_state": "Taken from docs/02-data-model.md; not present in tracker sheet 07. 'Unevaluable' means a rule's predicate is not implemented or could not be judged - distinct from 'Not passed', which means a condition was judged and failed. Gates fail closed: unevaluable is never passed."
  }
 }

@@ -79,8 +79,9 @@ stood at that moment into the signature record.
 > **Name collision with Laravel.** Laravel's own queue migration creates a table called
 > `jobs`. The lab domain's central table is also `jobs`, and the data model, the gate
 > rules and the exports all reference it by that name. Rename Laravel's queue table to
-> `queue_jobs` (and `failed_jobs`/`job_batches` alongside it for consistency) rather than
-> renaming the domain table. Set it before the first migration runs; renaming afterwards
+> `queue_jobs` rather than renaming the domain table. `failed_jobs` and `job_batches`
+> collide with nothing and are better left at Laravel's names — renaming them buys
+> cosmetic consistency at the cost of config surface. Set it before the first migration runs; renaming afterwards
 > means rewriting references across the whole build.
 
 **`jobs`** — `reference` (JOB-2026-NNN), `contract_review_id`, `workflow_definition_id`,
@@ -126,7 +127,8 @@ job. **This granularity is what makes "which requirements are outstanding" answe
 and is what the gate rules read.**
 
 **`job_gates`** — `job_id`, `workflow_gate_id`, `state` (Not reached / Open / Not passed /
-Passed), `blocked_reasons` (jsonb — the named failing conditions), `attestations` (jsonb),
+Unevaluable / Passed), `blocked_reasons` (jsonb — the named failing conditions),
+`attestations` (jsonb),
 `passed_by`, `passed_at`, `signature_id`, `reopened_count`, `reopen_reason`.
 
 ## Methods and verdicts
@@ -142,7 +144,8 @@ tester verdict with no row here must be refused at save time, not only at the ga
 
 **`job_provision_verdicts`** — `job_id`, `provision` (the `ts_ref` stem, e.g. `5.1-1`),
 `group_verdict` (PASS/FAIL/INCONCLUSIVE), `basis` (derived | external_evidence),
-`derived_at`. TS 103 701 assigns verdicts at three levels and `job_methods` holds only the
+`derived_at`. **No history twin, by design** — it is derived from `job_methods` and
+re-derivable at any time, so the record it would duplicate already has one. TS 103 701 assigns verdicts at three levels and `job_methods` holds only the
 lowest. Derive the group verdict per Table 2 and the job's overall verdict per Table 1 —
 see the verdict chain section in `03-gate-rules.md`. Never let anyone type either.
 
