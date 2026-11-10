@@ -4,6 +4,11 @@ A gate is a precondition on a state transition. A job cannot enter stage *n+1* u
 gate *n* reads **Passed**, and a gate reads Passed only when every rule below evaluates
 true and every attestation has been signed.
 
+> **The rules are now extracted.** `data/gates.json` carries all 11 gates, 79 machine
+> rules and 12 attestations with stable rule ids, descriptions and failure messages.
+> Seed from that file; this document is the reasoning behind it. Where the two
+> disagree, `gates.json` is the one that was checked.
+
 ## How to implement this
 
 One evaluator, rules as data. Each rule returns `{passed, reason}` where `reason` names
@@ -154,11 +159,13 @@ least-privilege access are genuinely in place.
 
 **Machine rules**
 
-1. Every `job_methods` row with `applicable = 'Y'` has a `verdict_tester` from the
-   controlled list.
-2. Every such row with verdict PASS or FAIL has at least one `job_method_evidence` row.
-3. Every INCONCLUSIVE verdict has non-empty `tester_notes` stating what was missing.
-4. `verdict_tester = 'N-A'` only where `ics_support = 'N'` or `'N-A'` traces to the ICS.
+1. Every `job_methods` row with `applicable = 'Y'` has `verdict_tester` in
+   **(PASS, FAIL, INCONCLUSIVE)**.
+2. **No row with `applicable = 'Y'` carries `verdict_tester = 'N-A'`.** See the note below.
+3. Every row with verdict PASS or FAIL has at least one `job_method_evidence` row.
+4. Every INCONCLUSIVE verdict has non-empty `tester_notes` naming the required element
+   that was absent or insufficient — which is what TS 103 701 Table 3 defines the verdict
+   to mean.
 5. Every `evidence` row has a non-empty `sha256`; uniqueness of (job, path) and
    (job, sha256) is enforced by the schema.
 6. Every planned `qc_activities` row has a `result` and a `performed_by`.
@@ -168,6 +175,16 @@ least-privilege access are genuinely in place.
 **Attestations** — that each SHA-256 matches the file on disk, that no file in
 `03_Evidence` is unregistered, and that the conceptual assessment was sound. *The system
 cannot verify the first two — see the limitation in `01-requirements.md`.*
+
+> **Why N-A is not a verdict.** ETSI TS 103 701 V1.1.1 Table 3 defines exactly three test
+> case verdicts: PASS, FAIL and INCONCLUSIVE. "N/A" belongs to the **ICS Support column**
+> (clause 4.4): a conditional provision the DUT cannot fulfil is claimed N/A by the
+> supplier with a justification in the Detail column. It describes applicability, not a
+> result. A method that is not applicable carries `applicable = 'N'` and no verdict at
+> all; the N/A column in the roll-up counts those rows, which is exactly why gate 7's
+> reconciliation has no N-A term and does not need one. An earlier revision of this
+> document permitted `verdict_tester = 'N-A'` on applicable methods, which would have
+> made gate 7 permanently unreconcilable.
 
 ## Gate 7 — Technical review
 
@@ -189,7 +206,35 @@ cannot verify the first two — see the limitation in `01-requirements.md`.*
 7. Every planned QC activity has been performed.
 8. Stage 7 requirements all Complete or N/A, and a signature exists.
 
+8. Stage 7 requirements all Complete or N/A, and a signature exists.
+9. **Test group verdicts are derived for every provision claimed Yes**, per TS 103 701
+   Table 2 (see below).
+
 **Attestation** — no PASS rests on evidence that does not support it.
+
+### The verdict chain the report depends on
+
+TS 103 701 assigns verdicts at three levels, and `job_methods` only holds the lowest one.
+The system must derive the other two or the report cannot state an overall verdict:
+
+- **Test case verdict** — one per method. What the tester and reviewer record.
+- **Test group verdict** — one per provision claimed "Yes" in the ICS. Table 2: PASS when
+  every test case in the group is PASS, or adequate external evidence was accepted under
+  clause 4.7; FAIL when any test case is FAIL; INCONCLUSIVE when any is INCONCLUSIVE and
+  none is FAIL. The `ts_ref` column on each method (`TS701-5.1-01`) names its provision,
+  so the grouping is already in the seed data.
+- **Overall verdict** — Table 1: PASS when the ICS is valid and every claimed provision's
+  test group is PASS; FAIL when the ICS is invalid or any claimed provision's group is
+  FAIL; INCONCLUSIVE when none fails but at least one group is INCONCLUSIVE.
+
+Derive these; never let anyone type them. A `job_provision_verdicts` table keyed on
+(job, provision) holding the derived group verdict and its basis makes the chain
+auditable, which is what an assessor will trace.
+
+**External evidence (clause 4.7)** is not modelled in v1. A test group can take a PASS
+without running its test cases when third-party evidence is adequate, and the laboratory
+must record its examination of scope, test depth and coverage. If the lab intends to
+accept external evidence, that needs a table and a gate 7 rule. Flagged, not built.
 
 ## Gate 8 — Reporting
 
@@ -206,7 +251,9 @@ cannot verify the first two — see the limitation in `01-requirements.md`.*
 5. `signed_by` holds authorized_signatory on this job with a valid competence record,
    and a `signatures` row exists for purpose `report_issue`.
 6. The report's section 4 figures equal the computed roll-up exactly.
-7. `issued_at` and `transmittal_reference` are set.
+7. No method with `applicable = 'Y'` remains at NOT TESTED.
+8. The overall verdict is derived per TS 103 701 Table 1 from the test group verdicts.
+9. `issued_at` and `transmittal_reference` are set.
 
 **Attestation** — every placeholder replaced, Annex T removed, TLP marking consistent on
 cover, header and footer.

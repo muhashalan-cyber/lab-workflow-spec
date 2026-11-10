@@ -4,6 +4,11 @@
 # been pulled or run. Verify every image tag and pin it to a digest before first deploy.
 #
 # Only `proxy` publishes a port. Everything else sits on the internal network.
+#
+# BUILD CONTEXT: `context: ..` assumes this file sits in the APPLICATION repo, one level
+# below its root, so the context contains composer.json. In the spec repo it does not.
+# Copy infra/ into the application repo and build from there; the spec keeps its copy as
+# reference only.
 
 name: labflow
 
@@ -82,6 +87,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./initdb:/docker-entrypoint-initdb.d:ro
+    # initdb needs DB_APP_USERNAME and DB_APP_PASSWORD in its environment; add them here.
     networks: [internal]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]

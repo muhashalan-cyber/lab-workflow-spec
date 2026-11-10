@@ -26,9 +26,13 @@ place; a new revision is created.
 **`workflow_requirements`** — `workflow_step_id`, `position`, `text` (may contain inline
 `<code>` markup from the source — render it, do not strip it).
 
-**`workflow_gates`** — `workflow_stage_id`, `number` (1–9 for sequential stages; stages 10
-and 11 carry a closing condition rather than a sequence gate), `statement`,
-`rules` (jsonb — see `03-gate-rules.md`).
+**`workflow_gates`** — `workflow_stage_id`, `number` (1–11), `kind`
+(`sequence_gate` | `closing_condition`), `blocks_sequence` (bool), `statement`,
+`rules` (jsonb). **Seed all 11 rows** — stages 10 and 11 carry a closing condition that
+gates their own closure, and discarding them would lose source text. Only the 9 rows with
+`kind = 'sequence_gate'` block progression. Rules come from `data/gates.json`: 79 machine
+rules and 12 attestations with stable ids. Store rule identity and messages here; keep
+the predicates in code keyed by rule id.
 
 **`method_library_versions`** — `revision` (1.2), `source_document`, `effective_from`,
 `approved_by`. **`methods`** — `method_library_version_id`, `method_id`
@@ -129,9 +133,20 @@ carries no condition), `ics_declared_by`, `ics_declared_at`, `applicable` (Y/N),
 **`job_method_evidence`** — pivot `job_method_id` ↔ `evidence_id`. A PASS or FAIL
 tester verdict with no row here must be refused at save time, not only at the gate.
 
+**`job_provision_verdicts`** — `job_id`, `provision` (the `ts_ref` stem, e.g. `5.1-1`),
+`group_verdict` (PASS/FAIL/INCONCLUSIVE), `basis` (derived | external_evidence),
+`derived_at`. TS 103 701 assigns verdicts at three levels and `job_methods` holds only the
+lowest. Derive the group verdict per Table 2 and the job's overall verdict per Table 1 —
+see the verdict chain section in `03-gate-rules.md`. Never let anyone type either.
+
+**Constraint:** a `job_methods` row with `applicable = 'Y'` may not carry
+`verdict_tester` or `final_verdict` of `N-A`. N-A is an ICS Support value, not a test case
+verdict. Enforce it with a check constraint, not only in the gate rule.
+
 **Roll-up** is computed from `job_methods`, never stored as entered figures. The
 reconciliation that must read OK before gate 8:
-`applicable = pass + fail + inconclusive + not_tested`.
+`applicable = pass + fail + inconclusive + not_tested`. The N/A column counts rows with
+`applicable = 'N'` and sits outside the equation.
 
 ## IXIT
 
@@ -185,8 +200,31 @@ the related job (ISO 7.9.5 and 7.9.6).
 
 **`audit_log`** — `actor_id`, `action`, `object_type`, `object_id`, `before` (jsonb),
 `after` (jsonb), `occurred_at`, `ip`, `request_id`. Written in the same transaction as
-the change. **Immutability:** revoke UPDATE and DELETE on this table from the application
-role, and add a trigger raising an exception on either. Prove it from tinker.
+the change.
+
+### Immutability needs two database roles, not one
+
+A trigger alone does not make a table immutable. **A table's owner can run
+`ALTER TABLE audit_log DISABLE TRIGGER ALL` and then delete freely**, and `REVOKE` barely
+binds an owner at all. A superuser bypasses both. So if the application connects as the
+database owner — which is what `POSTGRES_USER` gives you by default — the protection is
+one command away from gone, while a naive test still shows the trigger firing. That test
+would prove nothing.
+
+Two roles:
+
+- **Owner role** — owns the schema and runs migrations. Its credentials are used by the
+  migration step and are not present in the running application's environment.
+- **Runtime role** — a separate non-owner role the application connects as. On
+  `audit_log` it holds `SELECT` and `INSERT` only: no `UPDATE`, no `DELETE`, no
+  `TRUNCATE`, and no ownership, so it cannot disable the triggers either.
+
+Then add `BEFORE UPDATE` and `BEFORE DELETE` triggers that raise an exception, as
+defence in depth.
+
+**The validation case is not "does the trigger fire".** It is: connecting as the runtime
+role, every one of `UPDATE`, `DELETE`, `TRUNCATE`, `ALTER TABLE ... DISABLE TRIGGER` and
+`DROP TRIGGER` on `audit_log` fails. Test all five.
 
 **`signatures`** — `user_id`, `purpose` (gate_5, gate_7, gate_8, gate_9, report_issue),
 `subject_type`, `subject_id`, `statement` (what was attested), `state_snapshot` (jsonb —

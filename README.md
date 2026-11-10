@@ -32,8 +32,12 @@ source files, and they cannot be re-derived — seed from these.
   Each carries a normalised `conditional` boolean: 37 of the 63 carry a real condition
   and need an ICS value before gate 3 can pass; the other 26 read `N/A` in the source
   sheet, meaning unconditional, and have `conditions` nulled
+- `gates.json` — all 11 gates as structured rules: 79 machine checks and 12 attestations
+  with stable ids, descriptions and the failure message each should show. Seed from this
+  rather than transcribing `docs/03-gate-rules.md`
 - `provision-groups.json` — the 14 clause groups and how many methods sit in each
-- `controlled-lists.json` — the controlled drop-down values from tracker sheet 07
+- `controlled-lists.json` — the controlled drop-down values from tracker sheet 07, plus
+  `gate_state`, and notes on which values are verdicts and which are not
 
 ## What is in `ui/`
 
@@ -46,6 +50,13 @@ accordion, the gate boxes and the step/requirement structure are all settled the
 The source artefacts the data was extracted from, for checking. `job-runner-rev3.0.html`
 is the interactive runner the workflow JSON came from; the two `*-structure.md` files
 describe the v3.0 tracker workbook and the mapping workbook sheet by sheet.
+
+## `infra/` belongs in the application repo
+
+The compose file builds from a context containing `composer.json`, which this repo does
+not have. Copy `infra/` into the application repo and build from there. The copy here is
+reference, and nothing in it has been run — see `REVIEW-RESPONSE.md` for what a first
+review already found in it.
 
 ## Four decisions already settled — do not revisit without asking
 

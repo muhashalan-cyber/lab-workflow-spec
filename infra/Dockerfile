@@ -7,6 +7,11 @@ FROM dunglas/frankenphp:php8.3-alpine AS base
 RUN install-php-extensions \
       pdo_pgsql pgsql redis intl zip gd bcmath opcache pcntl exif
 
+# curl is NOT in the Alpine FrankenPHP image by default and the compose healthcheck
+# shells out to it. Without this, the healthcheck never passes and proxy, worker and
+# scheduler all wait forever on `app: service_healthy`.
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
 # Composer from its official image, pinned by you
@@ -32,4 +37,10 @@ RUN addgroup -g 1000 app && adduser -u 1000 -G app -s /bin/sh -D app \
  && chown -R app:app /app
 USER app
 
-ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=8080"]
+# Octane is NOT a default Laravel dependency - `composer require laravel/octane` and
+# `php artisan octane:install --server=frankenphp` first. Verify the command against the
+# Octane version you install; the documented form is:
+ENTRYPOINT ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=8080"]
+
+# Without Octane, serve through FrankenPHP's own Caddy config instead and drop this
+# ENTRYPOINT. Either is fine; decide once and record which.

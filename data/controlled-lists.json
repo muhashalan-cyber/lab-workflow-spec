@@ -1,10 +1,72 @@
 {
- "workflow_status": ["Not started","In progress","Complete","Passed","Not passed","N/A","Blocked"],
- "verdict": ["PASS","FAIL","INCONCLUSIVE","N-A","NOT TESTED"],
- "evidence_class": ["Confirmed by evidence","Declared by the manufacturer / supplier","Observed by the laboratory","Inferred but not confirmed","Unknown / not tested"],
- "ics_support": ["Y","N","N-A"],
- "review_status": ["Pending","Accepted","Rejected"],
- "tlp": ["TLP: RED","TLP: AMBER+STRICT","TLP: AMBER","TLP: GREEN","TLP: CLEAR"],
- "severity": ["Critical","High","Medium","Low","Informational"],
- "job_status": ["Open","On hold","Testing","In review","Reported","Done"]
+ "workflow_status": [
+  "Not started",
+  "In progress",
+  "Complete",
+  "Passed",
+  "Not passed",
+  "N/A",
+  "Blocked"
+ ],
+ "verdict": [
+  "PASS",
+  "FAIL",
+  "INCONCLUSIVE",
+  "N-A",
+  "NOT TESTED"
+ ],
+ "evidence_class": [
+  "Confirmed by evidence",
+  "Declared by the manufacturer / supplier",
+  "Observed by the laboratory",
+  "Inferred but not confirmed",
+  "Unknown / not tested"
+ ],
+ "ics_support": [
+  "Y",
+  "N",
+  "N-A"
+ ],
+ "review_status": [
+  "Pending",
+  "Accepted",
+  "Rejected"
+ ],
+ "tlp": [
+  "TLP: RED",
+  "TLP: AMBER+STRICT",
+  "TLP: AMBER",
+  "TLP: GREEN",
+  "TLP: CLEAR"
+ ],
+ "severity": [
+  "Critical",
+  "High",
+  "Medium",
+  "Low",
+  "Informational"
+ ],
+ "job_status": [
+  "Open",
+  "On hold",
+  "Testing",
+  "In review",
+  "Reported",
+  "Done"
+ ],
+ "gate_state": [
+  "Not reached",
+  "Open",
+  "Not passed",
+  "Passed"
+ ],
+ "stage_gate_kind": [
+  "sequence_gate",
+  "closing_condition"
+ ],
+ "_notes": {
+  "verdict": "Sheet 07 lists five values, but they are not all test case verdicts. ETSI TS 103 701 Table 3 admits exactly three test case verdicts: PASS, FAIL, INCONCLUSIVE. 'N-A' is an ICS Support value (clause 4.4), carried on the row to mark a non-applicable method, and 'NOT TESTED' is a transient state that must be zero before gate 8. A method with applicable = 'Y' may only carry PASS, FAIL or INCONCLUSIVE.",
+  "ics_support": "Per TS 103 701 clause 4.4: Y = claimed, N = applicable but not fulfilled (justification required), N-A = conditional provision the DUT cannot fulfil (justification required).",
+  "gate_state": "Taken from docs/02-data-model.md; not present in tracker sheet 07."
+ }
 }

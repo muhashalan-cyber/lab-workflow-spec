@@ -1,0 +1,653 @@
+{
+ "source": "docs/03-gate-rules.md, derived from PR-WKF-01 rev 3.0 gate statements, ISO/IEC 17025:2017 and ETSI TS 103 701 V1.1.1",
+ "workflow_code": "PR-WKF-01",
+ "workflow_revision": "3.0",
+ "note": "Rule predicates live in application code keyed by rule id; this file carries the identity, description and failure message so a blocked gate can name what is missing. A rule change is a code change and triggers re-validation of that case under ISO/IEC 17025 7.11.2.",
+ "gates": [
+  {
+   "number": 1,
+   "kind": "sequence_gate",
+   "stage": 1,
+   "title": "Intake and contract review",
+   "statement": "CR-2026-XXX exists, Decision = Accept, and the written Authorization to Test is filed in 00_Contract. Without all three, no technical work begins.",
+   "machine": [
+    {
+     "id": "g1.r1",
+     "description": "A contract_reviews row exists and is linked to the job",
+     "failure": "No contract review is linked to this job",
+     "severity": "blocking"
+    },
+    {
+     "id": "g1.r2",
+     "description": "decision = 'Accept' with decided_by and decided_at set",
+     "failure": "The contract review decision is not Accept, or is unsigned",
+     "severity": "blocking"
+    },
+    {
+     "id": "g1.r3",
+     "description": "authorization_to_test_path set and authorization_to_test_signed_at set",
+     "failure": "No signed Authorization to Test is on file",
+     "severity": "blocking"
+    },
+    {
+     "id": "g1.r4",
+     "description": "checklist_complete = true (CHK-CTR-01)",
+     "failure": "The contract review checklist is incomplete",
+     "severity": "blocking"
+    },
+    {
+     "id": "g1.r5",
+     "description": "coi_reference and confidentiality_reference both present",
+     "failure": "The conflict-of-interest or confidentiality instrument is missing",
+     "severity": "blocking"
+    },
+    {
+     "id": "g1.r6",
+     "description": "decision_rule and statement_of_conformity_basis both non-empty",
+     "failure": "The decision rule or the statement-of-conformity basis is not recorded",
+     "severity": "blocking"
+    },
+    {
+     "id": "g1.r7",
+     "description": "every stage 1 job_requirements row is Complete or N/A",
+     "failure": "Stage 1 has outstanding requirements",
+     "severity": "blocking"
+    },
+    {
+     "id": "g1.r8",
+     "description": "if subcontracting_required then subcontract_client_approval_reference is present",
+     "failure": "Subcontracting is required but the client's written approval is not recorded",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [
+    {
+     "id": "g1.a1",
+     "statement": "The scope was checked against SC-LAB-01 and out-of-scope items excluded or subcontracted"
+    }
+   ]
+  },
+  {
+   "number": 2,
+   "kind": "sequence_gate",
+   "stage": 2,
+   "title": "Job setup and readiness",
+   "statement": "JOB-2026-XXX is open, the job file exists, roles are authorized, the item and equipment are recorded as fit, and the three job documents exist with a version.",
+   "machine": [
+    {
+     "id": "g2.r1",
+     "description": "jobs.reference allocated and job_folder_path set",
+     "failure": "The job has no reference or no job folder path",
+     "severity": "blocking"
+    },
+    {
+     "id": "g2.r2",
+     "description": "job_roles holds responsible_engineer, technical_reviewer and authorized_signatory",
+     "failure": "A required role is unassigned on this job",
+     "severity": "blocking"
+    },
+    {
+     "id": "g2.r3",
+     "description": "each role's competence record is Active, carries the matching authority_flag, and valid_to is null or after jobs.planned_end_date",
+     "failure": "A role holder has no valid competence record covering the planned job end",
+     "severity": "blocking"
+    },
+    {
+     "id": "g2.r4",
+     "description": "no user holds both an engineer role and technical_reviewer on this job",
+     "failure": "The same person holds an engineer role and the reviewer role",
+     "severity": "blocking"
+    },
+    {
+     "id": "g2.r5",
+     "description": "a job_item_records row of kind 'receipt' exists with a value and a recorder",
+     "failure": "The test item receipt is not recorded",
+     "severity": "blocking"
+    },
+    {
+     "id": "g2.r6",
+     "description": "at least one job_equipment row exists, and every row with calibration_required has calibration_valid_to after jobs.planned_end_date",
+     "failure": "Equipment is missing, or its calibration expires before the planned job end",
+     "severity": "blocking"
+    },
+    {
+     "id": "g2.r7",
+     "description": "all six job_environment_checks rows exist with conforms set",
+     "failure": "An environmental condition check is missing or unanswered",
+     "severity": "blocking"
+    },
+    {
+     "id": "g2.r8",
+     "description": "job_documents holds rows of kind ixit, mapping and tracker, each with a version",
+     "failure": "A controlled job document is missing or has no version",
+     "severity": "blocking"
+    },
+    {
+     "id": "g2.r9",
+     "description": "every stage 2 job_requirements row is Complete or N/A",
+     "failure": "Stage 2 has outstanding requirements",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [
+    {
+     "id": "g2.a1",
+     "statement": "The test item's condition on receipt was judged and recorded"
+    },
+    {
+     "id": "g2.a2",
+     "statement": "The bench, the isolated test network and least-privilege access are in place"
+    }
+   ]
+  },
+  {
+   "number": 3,
+   "kind": "sequence_gate",
+   "stage": 3,
+   "title": "DUT identification and the ICS",
+   "statement": "Every conditional method carries an ICS Support value, every one of the 63 methods carries an applicability decision with its basis, and every N has been challenged and accepted by the laboratory.",
+   "machine": [
+    {
+     "id": "g3.r1",
+     "description": "job_methods holds exactly one row per method in the pinned library version (63 in rev 1.2)",
+     "failure": "The method set for this job is incomplete",
+     "severity": "blocking"
+    },
+    {
+     "id": "g3.r2",
+     "description": "every job_method whose method has conditional = true has ics_support in (Y, N, N-A) with ics_declared_by and ics_declared_at set",
+     "failure": "A conditional method has no ICS Support value. 37 methods are conditional in rev 1.2 — test the normalised 'conditional' boolean, not whether the Conditions text is empty",
+     "severity": "blocking"
+    },
+    {
+     "id": "g3.r3",
+     "description": "every job_method has applicable in (Y, N)",
+     "failure": "A method has no applicability decision",
+     "severity": "blocking"
+    },
+    {
+     "id": "g3.r4",
+     "description": "every job_method has a non-empty applicability_basis",
+     "failure": "A method's applicability has no stated basis",
+     "severity": "blocking"
+    },
+    {
+     "id": "g3.r5",
+     "description": "applicable = 'Y' exactly where ics_support = 'Y', or where the method is unconditional and claimed",
+     "failure": "Applicability does not follow the ICS claim",
+     "severity": "blocking"
+    },
+    {
+     "id": "g3.r6",
+     "description": "jobs.constrained_device is not null",
+     "failure": "The constrained-device question is unanswered",
+     "severity": "blocking"
+    },
+    {
+     "id": "g3.r7",
+     "description": "jobs manufacturer_model, serial_identifier and firmware_as_received are set, using an explicit 'Not provided' with a reason where the client supplied nothing",
+     "failure": "A DUT identification field is null rather than explicitly recorded as not provided",
+     "severity": "blocking"
+    },
+    {
+     "id": "g3.r8",
+     "description": "a job_ixit_documents row exists",
+     "failure": "No IXIT document is registered for this job",
+     "severity": "blocking"
+    },
+    {
+     "id": "g3.r9",
+     "description": "no information_gaps row with blocking = true is unresolved",
+     "failure": "A blocking information gap is open",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [
+    {
+     "id": "g3.a1",
+     "statement": "Each N was challenged against its condition and against IXIT section 2, and a justification is recorded in the Detail column as TS 103 701 clause 4.4 requires"
+    }
+   ]
+  },
+  {
+   "number": 4,
+   "kind": "sequence_gate",
+   "stage": 4,
+   "title": "IXIT completion and adequacy review",
+   "statement": "Every IXIT entry named by an applicable method is present at entry-per-mechanism granularity, with its information source recorded, and the IXIT document is approved at an issue version.",
+   "machine": [
+    {
+     "id": "g4.r1",
+     "description": "the job_ixit_documents row has version, approved_by and approved_at set",
+     "failure": "The IXIT document is not approved at a version",
+     "severity": "blocking"
+    },
+    {
+     "id": "g4.r2",
+     "description": "for every job_method with applicable = 'Y', each IXIT type named in methods.required_ixit is recorded as present",
+     "failure": "A required IXIT entry is missing for an applicable method",
+     "severity": "blocking"
+    },
+    {
+     "id": "g4.r3",
+     "description": "every required IXIT entry has an information source recorded",
+     "failure": "An IXIT entry has no stated information source",
+     "severity": "blocking"
+    },
+    {
+     "id": "g4.r4",
+     "description": "every information_gaps row raised against an IXIT entry is resolved or carries a stated effect_on_verdict",
+     "failure": "An IXIT observation is neither resolved nor carried to a verdict",
+     "severity": "blocking"
+    },
+    {
+     "id": "g4.r5",
+     "description": "every stage 4 job_requirements row is Complete or N/A",
+     "failure": "Stage 4 has outstanding requirements",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [
+    {
+     "id": "g4.a1",
+     "statement": "The adequacy of the IXIT content itself was judged against the lab's adequacy rules; inadequate content carries INCONCLUSIVE rather than FAIL"
+    }
+   ]
+  },
+  {
+   "number": 5,
+   "kind": "sequence_gate",
+   "stage": 5,
+   "title": "Method selection and the test plan",
+   "statement": "Applicability is complete for all 63 methods, verification or validation records exist for every method in use, deviations are authorized, and the Technical Reviewer has approved the plan.",
+   "machine": [
+    {
+     "id": "g5.r1",
+     "description": "gate 3 is Passed",
+     "failure": "Applicability is not yet complete",
+     "severity": "blocking"
+    },
+    {
+     "id": "g5.r2",
+     "description": "for every job_method with applicable = 'Y', a verification or validation record exists under PR-MET-01",
+     "failure": "A method in use has no verification or validation record",
+     "severity": "blocking"
+    },
+    {
+     "id": "g5.r3",
+     "description": "every method_deviations row has authorized_by and authorized_at set, and authorized_at precedes any tester verdict on that method",
+     "failure": "A method deviation is unauthorised, or was authorised after the testing it covers",
+     "severity": "blocking"
+    },
+    {
+     "id": "g5.r4",
+     "description": "at least one qc_activities row is planned, each with an acceptance_criterion",
+     "failure": "No quality control activity is planned for this job",
+     "severity": "blocking"
+    },
+    {
+     "id": "g5.r5",
+     "description": "the test plan is approved by a user who holds technical_reviewer on this job and holds no engineer role on it",
+     "failure": "No independent Technical Reviewer has approved the test plan",
+     "severity": "blocking"
+    },
+    {
+     "id": "g5.r6",
+     "description": "every stage 5 job_requirements row is Complete or N/A",
+     "failure": "Stage 5 has outstanding requirements",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [
+    {
+     "id": "g5.a1",
+     "statement": "The plan's setup, network topology and tooling are workable for this DUT"
+    }
+   ],
+   "note": "RG-CMP-01 currently authorises one person for all three roles, so g5.r5 cannot be satisfied until a deputy or external reviewer exists as a competence record. That is intended. Do not add a bypass."
+  },
+  {
+   "number": 6,
+   "kind": "sequence_gate",
+   "stage": 6,
+   "title": "Assessment execution and evidence",
+   "statement": "Every applicable method has a tester verdict, every verdict names at least one registered Evidence ID, every evidence file is registered once with a hash, and planned QC is logged.",
+   "machine": [
+    {
+     "id": "g6.r1",
+     "description": "every job_method with applicable = 'Y' has verdict_tester in (PASS, FAIL, INCONCLUSIVE)",
+     "failure": "An applicable method has no tester verdict, or carries a value that is not a TS 103 701 test case verdict",
+     "severity": "blocking"
+    },
+    {
+     "id": "g6.r2",
+     "description": "no job_method with applicable = 'Y' carries verdict_tester = 'N-A'",
+     "failure": "N-A is an ICS Support value, not a test case verdict. TS 103 701 Table 3 admits only PASS, FAIL and INCONCLUSIVE. A method that is not applicable carries applicable = 'N' and no verdict",
+     "severity": "blocking"
+    },
+    {
+     "id": "g6.r3",
+     "description": "every job_method with verdict PASS or FAIL has at least one job_method_evidence row",
+     "failure": "A verdict rests on no registered evidence",
+     "severity": "blocking"
+    },
+    {
+     "id": "g6.r4",
+     "description": "every INCONCLUSIVE verdict has non-empty tester_notes stating which required element was absent or insufficient",
+     "failure": "An INCONCLUSIVE verdict does not say what was missing, as TS 103 701 Table 3 requires",
+     "severity": "blocking"
+    },
+    {
+     "id": "g6.r5",
+     "description": "every evidence row has a non-empty sha256",
+     "failure": "Registered evidence has no hash",
+     "severity": "blocking"
+    },
+    {
+     "id": "g6.r6",
+     "description": "every planned qc_activities row has a result and a performed_by",
+     "failure": "A planned quality control activity has no recorded result",
+     "severity": "blocking"
+    },
+    {
+     "id": "g6.r7",
+     "description": "every stage 6 job_requirements row is Complete or N/A",
+     "failure": "Stage 6 has outstanding requirements",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [
+    {
+     "id": "g6.a1",
+     "statement": "Each registered SHA-256 matches the file on disk"
+    },
+    {
+     "id": "g6.a2",
+     "statement": "No file in 03_Evidence is unregistered"
+    },
+    {
+     "id": "g6.a3",
+     "statement": "The conceptual assessment was sound for each method"
+    }
+   ],
+   "note": "a1 and a2 cannot be checked by the system under the register-only decision. Render them as attestations, never as checks."
+  },
+  {
+   "number": 7,
+   "kind": "sequence_gate",
+   "stage": 7,
+   "title": "Technical review",
+   "statement": "Every tested method carries a reviewer verdict and a Final Verdict, the tracker counts reconcile, and the reviewer has signed the review record.",
+   "machine": [
+    {
+     "id": "g7.r1",
+     "description": "the reviewer holds technical_reviewer on this job, holds no engineer role on it, recorded no tester verdict on it and registered no evidence on it",
+     "failure": "The reviewer is not independent of the work",
+     "severity": "blocking"
+    },
+    {
+     "id": "g7.r2",
+     "description": "every job_method with applicable = 'Y' has verdict_reviewer and final_verdict set",
+     "failure": "An applicable method has no reviewer or final verdict",
+     "severity": "blocking"
+    },
+    {
+     "id": "g7.r3",
+     "description": "every job_method with applicable = 'N' has an applicability_basis consistent with its ics_support value",
+     "failure": "A non-applicable method's basis does not follow its ICS claim",
+     "severity": "blocking"
+    },
+    {
+     "id": "g7.r4",
+     "description": "every final verdict names at least one evidence row that exists",
+     "failure": "A final verdict cites evidence that is not registered",
+     "severity": "blocking"
+    },
+    {
+     "id": "g7.r5",
+     "description": "reconciliation holds: count(applicable='Y') = pass + fail + inconclusive + not_tested",
+     "failure": "The verdict counts do not reconcile against the applicable method count",
+     "severity": "blocking"
+    },
+    {
+     "id": "g7.r6",
+     "description": "for every method with a verdict, the equipment used was calibration-valid on the recorded test date",
+     "failure": "A verdict rests on equipment that was out of calibration on the test date",
+     "severity": "blocking"
+    },
+    {
+     "id": "g7.r7",
+     "description": "every planned QC activity has been performed",
+     "failure": "A planned quality control activity was not performed",
+     "severity": "blocking"
+    },
+    {
+     "id": "g7.r8",
+     "description": "a signature exists for purpose gate_7 and every stage 7 requirement is Complete or N/A",
+     "failure": "The review record is unsigned or stage 7 is incomplete",
+     "severity": "blocking"
+    },
+    {
+     "id": "g7.r9",
+     "description": "test group verdicts are derived for every provision claimed Yes, per TS 103 701 Table 2",
+     "failure": "Provision-level test group verdicts have not been derived from the test case verdicts",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [
+    {
+     "id": "g7.a1",
+     "statement": "No PASS rests on evidence that does not support it"
+    }
+   ]
+  },
+  {
+   "number": 8,
+   "kind": "sequence_gate",
+   "stage": 8,
+   "title": "Reporting",
+   "statement": "The report is signed by an Authorized Signatory, logged as REP-2026-XXX, and issued with the transmittal recorded.",
+   "machine": [
+    {
+     "id": "g8.r1",
+     "description": "gate 7 is Passed",
+     "failure": "The technical review is not complete",
+     "severity": "blocking"
+    },
+    {
+     "id": "g8.r2",
+     "description": "a reports row exists with reference, version and file_name",
+     "failure": "No report record exists",
+     "severity": "blocking"
+    },
+    {
+     "id": "g8.r3",
+     "description": "every item in content_checklist (the ISO 7.8.2 list) is true",
+     "failure": "A required report content item is not present",
+     "severity": "blocking"
+    },
+    {
+     "id": "g8.r4",
+     "description": "decision_rule_stated and opinions_marked are true, and subcontracted_results_identified is true where subcontracting was used",
+     "failure": "The report omits the decision rule, unmarked opinions, or unidentified subcontracted results",
+     "severity": "blocking"
+    },
+    {
+     "id": "g8.r5",
+     "description": "signed_by holds authorized_signatory on this job with a valid competence record, and a signatures row exists for purpose report_issue",
+     "failure": "The report is unsigned or signed by someone without signatory authority",
+     "severity": "blocking"
+    },
+    {
+     "id": "g8.r6",
+     "description": "the report's section 4 figures equal the computed roll-up exactly",
+     "failure": "The report's counts do not match the system's roll-up",
+     "severity": "blocking"
+    },
+    {
+     "id": "g8.r7",
+     "description": "no applicable method remains at NOT TESTED",
+     "failure": "An applicable method has not been tested",
+     "severity": "blocking"
+    },
+    {
+     "id": "g8.r8",
+     "description": "the overall verdict is derived per TS 103 701 Table 1 from the test group verdicts",
+     "failure": "No overall verdict has been derived",
+     "severity": "blocking"
+    },
+    {
+     "id": "g8.r9",
+     "description": "issued_at and transmittal_reference are set",
+     "failure": "The report has not been issued or the transmittal is not recorded",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [
+    {
+     "id": "g8.a1",
+     "statement": "Every placeholder was replaced, Annex T removed, and the TLP marking is consistent on cover, header and footer"
+    }
+   ]
+  },
+  {
+   "number": 9,
+   "kind": "sequence_gate",
+   "stage": 9,
+   "title": "Closure",
+   "statement": "Item disposed of as agreed, job file archived with retention applied, access revoked, Job_Register Status = Done.",
+   "machine": [
+    {
+     "id": "g9.r1",
+     "description": "a job_item_records row of kind 'return_or_disposal' exists with date and recipient",
+     "failure": "The test item's return or disposal is not recorded",
+     "severity": "blocking"
+    },
+    {
+     "id": "g9.r2",
+     "description": "jobs.archive_location and jobs.retention_period are set",
+     "failure": "The job archive location or retention period is not recorded",
+     "severity": "blocking"
+    },
+    {
+     "id": "g9.r3",
+     "description": "jobs.access_revoked_at is set and every job access grant is revoked",
+     "failure": "Job access has not been revoked",
+     "severity": "blocking"
+    },
+    {
+     "id": "g9.r4",
+     "description": "jobs.client_feedback_requested_at is set",
+     "failure": "Client feedback was not requested",
+     "severity": "blocking"
+    },
+    {
+     "id": "g9.r5",
+     "description": "jobs.status = 'Done' and actual_end_date is set",
+     "failure": "The job is not marked Done",
+     "severity": "blocking"
+    },
+    {
+     "id": "g9.r6",
+     "description": "no open nonconformities row blocks this job",
+     "failure": "An open nonconformity still blocks this job",
+     "severity": "blocking"
+    },
+    {
+     "id": "g9.r7",
+     "description": "every stage 9 job_requirements row is Complete or N/A",
+     "failure": "Stage 9 has outstanding requirements",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [
+    {
+     "id": "g9.a1",
+     "statement": "Client data held outside the archive has been securely deleted"
+    }
+   ]
+  },
+  {
+   "number": 10,
+   "kind": "closing_condition",
+   "stage": 10,
+   "title": "Nonconforming work",
+   "statement": "The decision on affected work is recorded, the client informed where an issued report was affected, resumption authorized in writing, and the NC closed with an outcome.",
+   "machine": [
+    {
+     "id": "g10.r1",
+     "description": "affected_work_decision is recorded",
+     "failure": "The decision on affected work is not recorded",
+     "severity": "blocking"
+    },
+    {
+     "id": "g10.r2",
+     "description": "where a report was issued, client_informed is true and report_recalled_or_amended is recorded",
+     "failure": "An affected report was not recalled or amended, or the client was not informed",
+     "severity": "blocking"
+    },
+    {
+     "id": "g10.r3",
+     "description": "resumption_authorized_by and resumption_authorized_at are set before work resumes",
+     "failure": "Work resumed without written authorization",
+     "severity": "blocking"
+    },
+    {
+     "id": "g10.r4",
+     "description": "closed_at, closed_by and outcome are set",
+     "failure": "The nonconformity has no recorded outcome",
+     "severity": "blocking"
+    },
+    {
+     "id": "g10.r5",
+     "description": "process_control_logged is true (NC_Work_Log)",
+     "failure": "The nonconformity is not logged in Process_Control",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [],
+   "note": "Not a sequence gate. An NC with blocks_stage_number set holds that stage until closed_at is set."
+  },
+  {
+   "number": 11,
+   "kind": "closing_condition",
+   "stage": 11,
+   "title": "Complaints",
+   "statement": "The outcome is decided by people not involved in the original activity, communicated formally, and the complaint closed.",
+   "machine": [
+    {
+     "id": "g11.r1",
+     "description": "acknowledged_at is set",
+     "failure": "The complaint was not acknowledged",
+     "severity": "blocking"
+    },
+    {
+     "id": "g11.r2",
+     "description": "investigator_id is not any job_roles.user_id on the related job",
+     "failure": "The investigator was involved in the work complained about (ISO 7.9.5)",
+     "severity": "blocking"
+    },
+    {
+     "id": "g11.r3",
+     "description": "decision_maker_id differs from investigator_id and is not any job_roles.user_id on the related job",
+     "failure": "The decision maker is not independent (ISO 7.9.6)",
+     "severity": "blocking"
+    },
+    {
+     "id": "g11.r4",
+     "description": "decision and communicated_at are set",
+     "failure": "The complaint outcome was not decided or not communicated",
+     "severity": "blocking"
+    },
+    {
+     "id": "g11.r5",
+     "description": "closed_at is set and the complaint is logged in Process_Control (Complaints_Log)",
+     "failure": "The complaint is not closed or not logged",
+     "severity": "blocking"
+    }
+   ],
+   "attestations": [],
+   "note": "Not a sequence gate. Independence is enforced on save, not only at closure."
+  }
+ ]
+}

@@ -21,7 +21,9 @@ is why the tests matter more here than in an ordinary project.
 3. **Record integrity.**
    - An amendment retains the previous value and names the amender.
    - An archived record stays retrievable by the Quality Manager and the auditor.
-   - An administrator account cannot alter or delete an `audit_log` row.
+   - Connected **as the runtime role**, all five of `UPDATE`, `DELETE`, `TRUNCATE`,
+     `ALTER TABLE ... DISABLE TRIGGER` and `DROP TRIGGER` on `audit_log` fail. Testing
+     only that the trigger fires proves nothing: the table's owner can disable it.
    - A passed gate locks its stage; reopening requires a reason and writes an amendment.
 4. **Identifier allocation.** No duplicate or reused job, evidence, report, NC or
    complaint identifiers, including under concurrent creation. Run it in parallel.

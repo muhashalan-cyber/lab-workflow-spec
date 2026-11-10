@@ -17,7 +17,9 @@
    ],
    "gate": {
     "number": 1,
-    "statement": "CR-2026-XXX exists, Decision = Accept, and the written Authorization to Test is filed in 00_Contract. Without all three, no technical work begins."
+    "statement": "CR-2026-XXX exists, Decision = Accept, and the written Authorization to Test is filed in 00_Contract. Without all three, no technical work begins.",
+    "kind": "sequence_gate",
+    "blocks_sequence": true
    },
    "steps": [
     {
@@ -68,7 +70,9 @@
    ],
    "gate": {
     "number": 2,
-    "statement": "JOB-2026-XXX is open, the job file exists, roles are authorized, the item and equipment are recorded as fit, and the three job documents exist with a version."
+    "statement": "JOB-2026-XXX is open, the job file exists, roles are authorized, the item and equipment are recorded as fit, and the three job documents exist with a version.",
+    "kind": "sequence_gate",
+    "blocks_sequence": true
    },
    "steps": [
     {
@@ -118,7 +122,9 @@
    ],
    "gate": {
     "number": 3,
-    "statement": "Every conditional method carries an ICS Support value, every one of the 63 methods carries an applicability decision with its basis, and every N has been challenged and accepted by the laboratory."
+    "statement": "Every conditional method carries an ICS Support value, every one of the 63 methods carries an applicability decision with its basis, and every N has been challenged and accepted by the laboratory.",
+    "kind": "sequence_gate",
+    "blocks_sequence": true
    },
    "steps": [
     {
@@ -157,7 +163,9 @@
    ],
    "gate": {
     "number": 4,
-    "statement": "Every IXIT entry named by an applicable method is present at entry-per-mechanism granularity, with its information source recorded, and the IXIT document is approved at an issue version."
+    "statement": "Every IXIT entry named by an applicable method is present at entry-per-mechanism granularity, with its information source recorded, and the IXIT document is approved at an issue version.",
+    "kind": "sequence_gate",
+    "blocks_sequence": true
    },
    "steps": [
     {
@@ -197,7 +205,9 @@
    ],
    "gate": {
     "number": 5,
-    "statement": "Applicability is complete for all 63 methods, verification or validation records exist for every method in use, deviations are authorized, and the Technical Reviewer has approved the plan."
+    "statement": "Applicability is complete for all 63 methods, verification or validation records exist for every method in use, deviations are authorized, and the Technical Reviewer has approved the plan.",
+    "kind": "sequence_gate",
+    "blocks_sequence": true
    },
    "steps": [
     {
@@ -238,7 +248,9 @@
    ],
    "gate": {
     "number": 6,
-    "statement": "Every applicable method has a tester verdict, every verdict names at least one registered Evidence ID, every evidence file is registered once with a hash, and planned QC is logged."
+    "statement": "Every applicable method has a tester verdict, every verdict names at least one registered Evidence ID, every evidence file is registered once with a hash, and planned QC is logged.",
+    "kind": "sequence_gate",
+    "blocks_sequence": true
    },
    "steps": [
     {
@@ -289,7 +301,9 @@
    ],
    "gate": {
     "number": 7,
-    "statement": "Every tested method carries a reviewer verdict and a Final Verdict, the tracker counts reconcile, and the reviewer has signed the review record in 05_Review_QC."
+    "statement": "Every tested method carries a reviewer verdict and a Final Verdict, the tracker counts reconcile, and the reviewer has signed the review record in 05_Review_QC.",
+    "kind": "sequence_gate",
+    "blocks_sequence": true
    },
    "steps": [
     {
@@ -329,7 +343,9 @@
    ],
    "gate": {
     "number": 8,
-    "statement": "The report is signed by an Authorized Signatory, logged as REP-2026-XXX, and issued with the transmittal recorded."
+    "statement": "The report is signed by an Authorized Signatory, logged as REP-2026-XXX, and issued with the transmittal recorded.",
+    "kind": "sequence_gate",
+    "blocks_sequence": true
    },
    "steps": [
     {
@@ -369,7 +385,9 @@
    ],
    "gate": {
     "number": 9,
-    "statement": "Item disposed of as agreed, job file archived with retention applied, access revoked, Job_Register Status = Done."
+    "statement": "Item disposed of as agreed, job file archived with retention applied, access revoked, Job_Register Status = Done.",
+    "kind": "sequence_gate",
+    "blocks_sequence": true
    },
    "steps": [
     {
@@ -408,7 +426,9 @@
    ],
    "gate": {
     "number": 10,
-    "statement": "The decision on affected work is recorded, the client has been informed where a report was affected, resumption is authorized in writing, and the NC is closed with an outcome."
+    "statement": "The decision on affected work is recorded, the client has been informed where a report was affected, resumption is authorized in writing, and the NC is closed with an outcome.",
+    "kind": "closing_condition",
+    "blocks_sequence": false
    },
    "steps": [
     {
@@ -445,7 +465,9 @@
    ],
    "gate": {
     "number": 11,
-    "statement": "The outcome is decided by person(s) not involved in the original activity, communicated formally to the complainant, and the complaint is closed."
+    "statement": "The outcome is decided by person(s) not involved in the original activity, communicated formally to the complainant, and the complaint is closed.",
+    "kind": "closing_condition",
+    "blocks_sequence": false
    },
    "steps": [
     {
@@ -471,5 +493,6 @@
     }
    ]
   }
- ]
+ ],
+ "note": "All 11 stages carry a gate object so no source text is discarded. Only the 9 with kind = sequence_gate block progression; stages 10 and 11 carry a closing condition that gates their own closure. Machine rules for each live in data/gates.json."
 }
