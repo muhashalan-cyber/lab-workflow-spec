@@ -76,6 +76,13 @@ stood at that moment into the signature record.
 
 ## Jobs
 
+> **Name collision with Laravel.** Laravel's own queue migration creates a table called
+> `jobs`. The lab domain's central table is also `jobs`, and the data model, the gate
+> rules and the exports all reference it by that name. Rename Laravel's queue table to
+> `queue_jobs` (and `failed_jobs`/`job_batches` alongside it for consistency) rather than
+> renaming the domain table. Set it before the first migration runs; renaming afterwards
+> means rewriting references across the whole build.
+
 **`jobs`** — `reference` (JOB-2026-NNN), `contract_review_id`, `workflow_definition_id`,
 `method_library_version_id`, `client_id`, `status` (job_status list), `classification_tlp`,
 `job_folder_path`, `start_date`, `planned_end_date`, `actual_end_date`,

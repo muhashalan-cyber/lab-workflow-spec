@@ -54,6 +54,11 @@ services:
       context: ..
       dockerfile: infra/Dockerfile
     restart: unless-stopped
+    # The FrankenPHP base image ships a healthcheck polling Caddy's admin port. This
+    # service runs no web server, so it could never satisfy it and would sit forever
+    # in "starting". Disable the inherited check.
+    healthcheck:
+      disable: true
     env_file: [.env]
     command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600"]
     volumes:
@@ -68,6 +73,11 @@ services:
       context: ..
       dockerfile: infra/Dockerfile
     restart: unless-stopped
+    # The FrankenPHP base image ships a healthcheck polling Caddy's admin port. This
+    # service runs no web server, so it could never satisfy it and would sit forever
+    # in "starting". Disable the inherited check.
+    healthcheck:
+      disable: true
     env_file: [.env]
     command: ["php", "artisan", "schedule:work"]
     volumes:

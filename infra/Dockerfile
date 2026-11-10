@@ -1,15 +1,18 @@
-# NOT TESTED — no base image was pulled in the sandbox that wrote this.
-# Verify the FrankenPHP tag and the extension list against the Laravel and Filament
-# versions you actually install.
+# Partly verified: a build session brought this stack up on 10 Nov 2026 and corrected
+# the PHP pin and the entrypoint. Still verify the tag and extension list against the
+# Laravel and Filament versions you install.
+#
+# PHP 8.4, not 8.3: current Laravel 12 pulls Symfony 8 components requiring PHP >= 8.4.1,
+# so Filament 4 will not install on 8.3 at all.
 
-FROM dunglas/frankenphp:php8.3-alpine AS base
+FROM dunglas/frankenphp:php8.4-alpine AS base
 
 RUN install-php-extensions \
       pdo_pgsql pgsql redis intl zip gd bcmath opcache pcntl exif
 
-# curl is NOT in the Alpine FrankenPHP image by default and the compose healthcheck
-# shells out to it. Without this, the healthcheck never passes and proxy, worker and
-# scheduler all wait forever on `app: service_healthy`.
+# curl IS present in the current FrankenPHP Alpine image — an earlier revision of this
+# file claimed otherwise and was wrong. Installing it explicitly keeps the compose
+# healthcheck working if that ever stops being true; harmless either way.
 RUN apk add --no-cache curl
 
 WORKDIR /app

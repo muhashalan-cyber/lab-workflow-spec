@@ -13,6 +13,10 @@ CREATE TRIGGER audit_log_no_update BEFORE UPDATE ON audit_log
 CREATE TRIGGER audit_log_no_delete BEFORE DELETE ON audit_log
   FOR EACH ROW EXECUTE FUNCTION audit_log_is_append_only();
 
+-- TRUNCATE needs a STATEMENT-level trigger: row-level triggers never fire for it.
+CREATE TRIGGER audit_log_no_truncate BEFORE TRUNCATE ON audit_log
+  FOR EACH STATEMENT EXECUTE FUNCTION audit_log_is_append_only();
+
 -- The default privileges granted the runtime role full DML. Take it back on this table.
 REVOKE ALL ON audit_log FROM <DB_APP_USERNAME>;
 GRANT SELECT, INSERT ON audit_log TO <DB_APP_USERNAME>;
