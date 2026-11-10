@@ -129,6 +129,15 @@ files and changed hashes. It stores no file, so the register-only decision stand
    the file supplied is **rev 1.2**. Confirm which is controlled before seeding.
 5. **Reviewer independence is unresolved in people terms.** Jobs will stop at gate 5
    until a deputy or external reviewer exists as a competence record. Intended behaviour.
-6. **Values to confirm:** retention period from `PR-REC-CTRL-01`; RPO 24h and RTO one
+6. **Historical jobs and their identifiers.** The lab already has JOB-2026-001 completed
+   and others in flight, numbered before this system existed. But the design allocates
+   every identifier itself and never lets one be typed, precisely so numbers cannot be
+   reused or invented. If historical jobs are to live in the system, that needs a
+   controlled backfill — a one-time import that sets the sequences and records who
+   authorised each pre-existing number — not someone typing a job number into a form. The
+   alternative is that historical jobs stay in the spreadsheets and the system starts from
+   the next new job. Decide before the pre-production rebuild, because that is when the
+   sequences are set.
+7. **Values to confirm:** retention period from `PR-REC-CTRL-01`; RPO 24h and RTO one
    working day as proposed; number of accounts at the start; whether an Arabic interface
    is required or English-only is acceptable for v1.

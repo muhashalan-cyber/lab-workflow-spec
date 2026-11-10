@@ -131,6 +131,14 @@ Unevaluable / Passed), `blocked_reasons` (jsonb — the named failing conditions
 `attestations` (jsonb),
 `passed_by`, `passed_at`, `signature_id`, `reopened_count`, `reopen_reason`.
 
+**Reaching `Passed` is a deliberate transition, not a computed state.** Evaluation sets
+`Open`, `Not passed` or `Unevaluable`; a separate close action promotes to `Passed` and
+records the actor and timestamp. It is refused unless every machine rule is satisfied,
+every attestation is signed, and no rule is unevaluable. Gates 5, 7, 8 and 9 additionally
+require a `signature_id` from a re-authentication at the moment of closing. Keeping the
+promotion separate is what makes "who passed this gate, and when" a recorded act rather
+than a side effect of a query.
+
 ## Methods and verdicts
 
 **`job_methods`** — `job_id`, `method_id`, `ics_support` (Y/N/N-A, null where the method
@@ -208,9 +216,32 @@ the related job (ISO 7.9.5 and 7.9.6).
 
 ## Integrity infrastructure
 
-**`audit_log`** — `actor_id`, `action`, `object_type`, `object_id`, `before` (jsonb),
-`after` (jsonb), `occurred_at`, `ip`, `request_id`. Written in the same transaction as
-the change.
+**`audit_log`** — `actor_id` **NOT NULL**, `action`, `object_type`, `object_id`,
+`before` (jsonb), `after` (jsonb), `occurred_at`, `ip`, `request_id`. Written in the same
+transaction as the change.
+
+### Every audit row must name an actor
+
+`actor_id` is **NOT NULL**, enforced by the database, not by application code. ISO/IEC
+17025 7.5.2 requires the person who amended a record to be identifiable; a row with no
+actor is not evidence of anything, and because the table is append-only it can never be
+repaired afterwards.
+
+A missing actor must **throw**, not default to null. Writes with no human behind them —
+seeders, console commands, queue jobs, scheduled work — go through an explicit
+`actingAsSystem()` that attributes to a named, reserved system principal: a real row the
+actor join resolves to, such as `system:seeder`, not a null wearing a label. The point is
+that unattributed writes become impossible rather than discouraged, because the failure
+mode is silent — a seeder written six months from now produces null-actor rows and nothing
+complains.
+
+**On a table that already holds null actors** the two requirements collide: `SET NOT NULL`
+scans the table and fails, and the nulls cannot be cleared because `UPDATE` on `audit_log`
+raises even for the owner, which is the point of the table. Resolve it with a
+`CHECK (actor_id IS NOT NULL)` added `NOT VALID` — it binds every future row at the
+database level without rewriting history — and upgrade to a literal `NOT NULL` column
+wherever the table is already clean. Both branches are database enforcement. A database
+built fresh gets the column constraint outright.
 
 ### Immutability needs two database roles, not one
 

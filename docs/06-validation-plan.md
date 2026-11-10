@@ -42,6 +42,24 @@ is why the tests matter more here than in an ordinary project.
 8. **Interfaces.** Any integration that exists at v1 — at minimum the export generation
    path and the queue worker — behaves correctly when the dependency is slow or absent.
 
+## Two modes, and only one may tolerate a known defect
+
+The day-to-day proof command and the validation run are not the same thing, and
+conflating them costs you either signal or evidence.
+
+- **The development proof command** may carry a recorded baseline of known, unrepairable
+  defects — audit rows that predate enforcement, for instance — provided it names each
+  one, fails if the count ever rises, and never reports them as a pass. Its job is to say
+  *something new broke*. A permanently red build is read exactly like a permanently green
+  one.
+- **The validation run that produces `VAL-WKF-01` demands zero.** No baseline, no
+  tolerated residue, no known defects. It runs against the clean database that ISO 7.11.2
+  requires before first production use, and either passes entirely or the system is not
+  authorised for use.
+
+Keeping both means red still means something during the build, while the evidence an
+assessor reads carries no asterisks.
+
 ## Recording
 
 Each case needs an expected result, an actual result, a tester, a date and a verdict.

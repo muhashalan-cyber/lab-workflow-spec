@@ -146,3 +146,42 @@ consistency and has been withdrawn.
 **No Filament UI exists yet**, and slice item 3 says the steps and requirements should
 "render and save". The session proved the save half and flagged the render half as not
 done rather than letting it read as complete. The slice stays open until a page exists.
+
+---
+
+# Response to the attribution and fail-closed review — 11 November 2026
+
+**The two instructions did collide, and the resolution is right.** NOT NULL at the column
+and retaining rows that violate it cannot both hold: `SET NOT NULL` scans the table, and
+the offending rows cannot be cleared because `UPDATE` on `audit_log` raises even for the
+owner. `CHECK (actor_id IS NOT NULL)` added `NOT VALID`, upgraded to a literal `NOT NULL`
+wherever the table is clean, satisfies both at the database level. Recorded in
+`docs/02-data-model.md`.
+
+**The data model did not carry the attribution requirement at all.** The session reported
+that line 211 lacked `NOT NULL`; it was worse than that. The edit that was supposed to add
+the whole *Every audit row must name an actor* section to `docs/02-data-model.md` was a
+`replace()` whose search text did not match the file's line wrapping, so it silently did
+nothing while the script reported success. The requirement existed only in
+`REVIEW-RESPONSE.md` and the validation plan — exactly where someone building from the
+normative data model would not see it. Now present, with every edit in that change
+asserted rather than assumed.
+
+**Reaching `Passed` is now specified as a deliberate transition.** The session found that
+`Passed` was implied but never reachable: evaluation only ever produced `Open` or `Not
+passed`. A separate close action now promotes to `Passed`, records actor and timestamp,
+and is refused unless every machine rule is satisfied, every attestation signed and
+nothing unevaluable. That is a better design than this package specified and is now part
+of it.
+
+**The known-defect question, answered by splitting the two runs.** The development proof
+command may carry a named baseline of unrepairable defects, provided it fails if the count
+rises and never reports them as a pass — a permanently red build is read exactly like a
+permanently green one. The validation run that produces `VAL-WKF-01` demands zero, runs
+against the clean database, and tolerates nothing. See `docs/06-validation-plan.md`.
+
+**New open question 6: historical jobs and their identifiers.** The lab already has
+JOB-2026-001 completed and others in flight, numbered before this system existed, while
+the design allocates every identifier itself and never lets one be typed. Backfilling
+them needs a controlled one-time import, not a form field. Decide before the
+pre-production rebuild, because that is when the sequences are set.
