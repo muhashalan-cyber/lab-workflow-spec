@@ -185,3 +185,26 @@ JOB-2026-001 completed and others in flight, numbered before this system existed
 the design allocates every identifier itself and never lets one be typed. Backfilling
 them needs a controlled one-time import, not a form field. Decide before the
 pre-production rebuild, because that is when the sequences are set.
+
+---
+
+# Response to the tracker page review — 11 November 2026
+
+**Reviewed by rendering the snapshot and looking at both gate cards.** The signed
+attestation reads as an assertion, not a verification. The devices that do the work: a
+separately bordered box with a blue rail, a quill rather than a tick, no checkmark
+anywhere on the card because the machine rules use coloured rule-id chips instead, the
+explicit "The system cannot verify these", and a per-item "Asserted by *name* on *date* —
+not verified by the system". The unsigned state reads correctly too: "Not yet attested —
+needs a named person to assert it" is clearly an outstanding action, not a failed check.
+
+**The prototype never covered attestations**, which the build session was right to flag —
+`ui/prototype.html` renders only a gate statement and a pill, with no named reasons at
+all, despite `UI_NOTES.md` claiming the gate box is where `blocked_reasons` go. The
+three-box design is now recorded in `UI_NOTES.md` as the settled pattern, with the three
+rules that carry the distinction, so it lives in the spec rather than only in the app.
+
+**Two refinements recorded**, neither blocking: the signed state sets "not verified by
+the system" in the quietest type on the card while the unsigned state shouts in amber —
+the asymmetry runs the wrong way, since the signed case is the risky one. And the
+attestation box should carry a count matching "8 of 8 conditions met".
