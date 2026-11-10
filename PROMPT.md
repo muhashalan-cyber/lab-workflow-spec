@@ -1,6 +1,7 @@
 # Prompt for the server-side Claude Code session
 
-Paste this after putting the repo on the server. Replace `<PATH>` with where it landed.
+Paste this into the Claude Code session on the Ubuntu home-lab server. It clones the
+repo itself, so there is nothing to copy across first.
 
 ---
 
@@ -10,8 +11,17 @@ uses today. Once it's live the database — not the spreadsheet — is the lab's
 its testing jobs, which is why the integrity and validation requirements in it are real
 constraints rather than nice-to-haves.
 
-Everything you need is in the `labflow-handover` repo at `<PATH>`. Read `README.md`
-first, then follow the reading order it gives. Don't write code until you've read
+Start by cloning the spec repo, then read `README.md` and follow the reading order it
+gives:
+
+```
+git clone https://github.com/muhashalan-cyber/lab-workflow-spec
+cd lab-workflow-spec
+```
+
+It is a specification repo, not the application. Build the application in a separate
+directory and treat this one as read-only reference — if you find something wrong in it,
+tell me rather than editing it, so the spec and the code keep separate histories. Don't write code until you've read
 `docs/01-requirements.md`, `BUILD_BRIEF.md`, `docs/02-data-model.md` and
 `docs/03-gate-rules.md`. The nine gate rules are the system's core logic — everything
 else exists to serve them.
