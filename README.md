@@ -27,11 +27,11 @@ source files, and they cannot be re-derived — seed from these.
 
 - `workflow.json` — PR-WKF-01 rev 3.0: 11 stages, 25 steps, 51 requirements, 9 gates,
   with each stage's purpose, ISO references and controlled documents
-- `methods.json` — all 63 ETSI methods from Method / Test Mapping rev 1.2, with
+- `methods.json` — all 62 ETSI methods from Method / Test Mapping **rev 1.3**, with
   conditions, acceptance criteria, steps and evidence, tools and required IXIT entries.
-  Each carries a normalised `conditional` boolean: 37 of the 63 carry a real condition
-  and need an ICS value before gate 3 can pass; the other 26 read `N/A` in the source
-  sheet, meaning unconditional, and have `conditions` nulled
+  Each carries a normalised `conditional` boolean: 36 of the 62 carry a real condition;
+  the other 26 read `N/A` in the source sheet, meaning unconditional, and have
+  `conditions` nulled. Rev 1.3 removed `CLT-SCA-FI-01` by lab decision on 11 Nov 2026
 - `gates.json` — all 11 gates as structured rules: 79 machine checks and 12 attestations
   with stable ids, descriptions and the failure message each should show. Seed from this
   rather than transcribing `docs/03-gate-rules.md`

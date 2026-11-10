@@ -15,6 +15,13 @@ RUN install-php-extensions \
 # healthcheck working if that ever stops being true; harmless either way.
 RUN apk add --no-cache curl
 
+# Node is needed to compile Filament's CSS and JS through Vite. The PHP image has none.
+# WITHOUT THIS STEP THE PANEL RENDERS AS UNSTYLED HTML: no layout, no typography, and
+# inline heroicon SVGs expand to fill the viewport because the utility classes that size
+# them were never generated. Any hand-written stylesheet served from public/ still loads,
+# which makes the result look like a broken design rather than a missing build.
+RUN apk add --no-cache nodejs npm
+
 WORKDIR /app
 
 # Composer from its official image, pinned by you
@@ -28,8 +35,9 @@ COPY . .
 RUN composer dump-autoload --optimize --no-dev \
  && php artisan storage:link || true
 
-# Front-end assets. Drop this stage if you build assets outside the image.
-# RUN npm ci && npm run build
+# Front-end assets. This runs AFTER composer install and COPY . . on purpose: Filament's
+# theme CSS imports from vendor/filament, so vendor must already exist.
+RUN npm ci && npm run build
 
 ENV SERVER_NAME=:8080
 EXPOSE 8080

@@ -14,7 +14,7 @@ and refuses to let a job move past a gate whose conditions are not met.
 In scope:
 
 - Contract reviews, jobs, and the stage/step/gate state of each job
-- The 63-method ETSI library, per-job applicability and verdicts, and the roll-up that
+- The ETSI method library (62 methods in rev 1.3), per-job applicability and verdicts, and the roll-up that
   feeds report section 4
 - The evidence register, deviations, planned QC, and information gaps
 - Nonconforming work and complaints raised against a job

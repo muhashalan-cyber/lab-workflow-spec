@@ -866,19 +866,5 @@
   "decision_rule_applies": null,
   "required_ixit": "IXIT 11-ComMech: ID, Description IXIT 27-UserIntf: ID, Description IXIT 28-ExtAPI: ID, Description IXIT 29-InpVal: ID, Description",
   "conditional": true
- },
- {
-  "method_id": "CLT-SCA-FI-01",
-  "provision_title": "SCA/FI screening",
-  "test_title": "Side-Channel & Fault-Injection — screening level",
-  "ts_ref": "N/A",
-  "m_or_r": "Scheme-defined",
-  "conditions": "ICS-SCA-FI-01",
-  "steps_evidence": "Steps (screening, non-destructive):\n1-Baseline & Triggering — Record normal operation for each target function (golden traces, timestamps, UART logs). Verify stable triggers and DUT repeatability.\n2-Passive SCA Screening — Capture short runs of power/EM traces around the target function while varying non-sensitive inputs minimally; look for obvious, repeatable correlation/leakage patterns (qualitative only at screening level).\n3-Plan FI Windows — From the baseline timing, define conservative windows where a fault might influence the target check (pre-check, compare, branch). Document planned windows and step sizes.\n4-Clock Glitch Screening — Apply low-energy, short-duration timing perturbations across the defined window (coarse sweep). Observe DUT behavior (reset, error, hang, pass/fail outcome).\n5-Voltage Glitch Screening — Within safe envelopes, apply brief supply perturbations (coarse sweep). Monitor device state and logs; immediately abort on abnormal thermals/overcurrent.\n6-EM Transient Screening (optional) — Apply low-energy EM pulses while scanning across the package area (coarse grid) and timing window.\n7-Reproduce Interesting Effects — If any anomalous behavior suggests security-relevant impact (e.g., signature check unexpectedly “passes,” lockout skipped), attempt to reproduce ≥3 times with the same parameters.\n8-Containment & Health Check — After each series, verify DUT still boots and functions normally; compare hash/version to pre-test; reset to golden state if needed.\n9-Cleanup — Restore default settings; remove probes; document any persistent side effects and notify TM/client per PR-NC-01 if nonconforming work is suspected.\n\nEvidence to Capture:\n-Test matrix (date/time, operator, target function, trigger, window, parameters, repetitions, outcomes).\n-Setup photos (probe points, shielding), wiring diagram, and risk/safety checklist.\n-Baseline (“golden”) traces and representative SCA/FI traces (file paths + checksums).\n-DUT console logs/UART captures; application/system logs; any network pcaps if behavior is network-visible.\n-Tool configs & versions; environment notes (temp, supply voltage).\n-Firmware/boot image identifiers and hashes used during testing.\n-Reproducibility record (attempts vs. successes), severity rating, and any hypothesized mechanism (qualitative).\n-Post-test health verification (functional checks, version/hash unchanged).",
-  "acceptance_criteria": "Pass (screening): No reproducible bypass or safety-relevant malfunction within defined screening envelopes; any observed leakage is documented qualitatively with no key or credential extraction attempted.\nFinding: A reproducible effect that degrades a security control (e.g., bypass of verification, lockout defeat) within screening envelopes → record as a finding under this LD method (outside ETSI EN/TS conformance scope), with recommended mitigations.",
-  "tools": "Side channel & fault injection tools.",
-  "decision_rule_applies": "No",
-  "required_ixit": "IXIT: permitted stress limits; safety constraints",
-  "conditional": true
  }
 ]

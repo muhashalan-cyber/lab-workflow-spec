@@ -39,10 +39,10 @@ the predicates in code keyed by rule id.
 (CLT-701-PWD-01), `provision_title`, `test_title`, `ts_ref`, `m_or_r`, `conditions`,
 `steps_evidence`, `acceptance_criteria`, `tools`, `decision_rule_applies`,
 `required_ixit`, `provision_group_clause`. Unique on (version, method_id).
-Seed from `data/methods.json`; 63 rows, 37 with a non-empty `conditions`.
+Seed from `data/methods.json`; **62 rows in rev 1.3**, 36 of them conditional.
 
 **`provision_groups`** — `clause`, `title`, `methods_in_library`. Seed from
-`data/provision-groups.json`; totals must sum to 63.
+`data/provision-groups.json`; 13 groups in rev 1.3, totals must sum to 62.
 
 ## Identity and competence
 
@@ -141,13 +141,17 @@ than a side effect of a query.
 
 ## Methods and verdicts
 
-**`job_methods`** — `job_id`, `method_id`, `ics_support` (Y/N/N-A, **required on every
-row**; `N-A` permitted only where the method is conditional — TS 103 701 clause 4.4 gives
+**`job_methods`** — `job_id`, `method_id`, `ics_support` (Y/N/N-A; **nullable at insert,
+required at gate 3**. A job opens with one empty row per method and the ICS is declared
+during stage 3, so a NOT NULL column would make opening a job impossible — this is a
+gate-time requirement enforced by `g3.r2`, not an insert-time one. `N-A` permitted only
+where the method is conditional — TS 103 701 clause 4.4 gives
 every provision a Support value, and the 19 unconditional recommendations need somewhere
 to record whether the supplier claimed them), `ics_declared_by`, `ics_declared_at`, `applicable` (Y/N),
 `applicability_basis`, `verdict_tester`, `verdict_tester_by`, `verdict_tester_at`,
 `verdict_reviewer`, `verdict_reviewer_by`, `verdict_reviewer_at`, `final_verdict`,
-`tester_notes`, `reviewer_notes`. Unique on (job_id, method_id). 63 rows per job.
+`tester_notes`, `reviewer_notes`. Unique on (job_id, method_id). One row per method in the
+pinned library revision — 62 per job in rev 1.3.
 
 **`job_method_evidence`** — pivot `job_method_id` ↔ `evidence_id`. A PASS or FAIL
 tester verdict with no row here must be refused at save time, not only at the gate.

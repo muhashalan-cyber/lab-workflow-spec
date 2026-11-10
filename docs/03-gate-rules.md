@@ -97,15 +97,15 @@ least-privilege access are genuinely in place.
 
 **Machine rules**
 
-1. `job_methods` holds exactly 63 rows for the job.
-2. **Every one of the 63** has `ics_support` in (Y, N, N-A), with `ics_declared_by` and
+1. `job_methods` holds one row per method in the pinned library revision — 62 in rev 1.3.
+2. **Every method** has `ics_support` in (Y, N, N-A), with `ics_declared_by` and
    `ics_declared_at` set. `N-A` is legal **only** where `conditional = true`.
-   *Do not test `conditions` for emptiness:* 26 of the 63 carry the literal string
+   *Do not test `conditions` for emptiness:* 26 of the 62 carry the literal string
    `N/A` in the Conditions column, meaning unconditional. `data/methods.json` carries
    a normalised `conditional` boolean — use it.
 
    > An earlier revision required `ics_support` only on the 37 conditional methods. That
-   > was wrong, and it made the applicability rule unimplementable: 19 of the 63 are
+   > was wrong, and it made the applicability rule unimplementable: 19 of the 62 are
    > unconditional **recommendations**, and whether the supplier claimed them is a real
    > choice with nowhere to live. TS 103 701 clause 4.4 settles it — the Support column
    > carries Yes, No or N/A for *every* provision. "Yes" claims it, "No" means applicable
@@ -125,8 +125,8 @@ least-privilege access are genuinely in place.
 9. Every unconditional **mandatory** method has `ics_support` recorded, and where it is
    not `Y` the job carries a recorded acknowledgement that overall PASS is unreachable —
    clause 4.4: "The mandatory provisions shall be claimed by the SO to achieve an overall
-   PASS verdict." Of the 63: 37 conditional, 7 unconditional mandatory, 19 unconditional
-   recommended.
+   PASS verdict." Of the 62 in rev 1.3: 36 conditional, 7 unconditional mandatory, 19
+   unconditional recommended.
 
 **Attestation** — each N was challenged against its condition and against IXIT section 2.
 
@@ -252,29 +252,25 @@ Derive these; never let anyone type them. A `job_provision_verdicts` table keyed
 (job, provision) holding the derived group verdict and its basis makes the chain
 auditable, which is what an assessor will trace.
 
-### CLT-SCA-FI-01 sits outside the verdict chain
+### Every method maps to a provision, as of library rev 1.3
 
-One method cannot be placed in a test group. `CLT-SCA-FI-01` carries the literal `ts_ref`
-of `N/A`, because SCA / FI screening is scheme-defined rather than an EN 303 645
-provision. The claim that `ts_ref` names every method's provision holds for 62 of 63.
+`CLT-SCA-FI-01` was the only method with no provision key — `ts_ref` of `N/A`, because
+SCA / FI screening is scheme-defined rather than an EN 303 645 provision. **The lab
+removed it from the method library on 11 November 2026**, which is why rev 1.3 holds 62
+methods rather than 63.
 
-**Recommended position, for the lab to ratify: exclude it from the Table 1 chain and
-report it separately.** This is not a presentation preference. Table 1 composes the
-overall verdict from provisions claimed "Yes" in the ICS, and SCA/FI is not such a
-provision. Giving it a synthetic provision key so it flows through Table 1 would alter
-clause 4.6 verdict assignment — and the lab's recorded position in DCN-2026-01 §2 is that
-TS 103 701 remains a **standard method** under ISO/IEC 17025 7.2.1 precisely because
-nothing alters verdict assignment, the provision set, or a test unit. A change that does
-converts it to a **laboratory-modified standard method**, requiring 7.2.2 validation and
-client notification of deviation before use. That is a far larger consequence than the
-placement of one method.
+That settles the question of whether a scheme-defined method should flow through Table 1
+by removing the method rather than answering it, and it is the cleaner outcome: no
+synthetic provision key, no exclusion policy to ratify, and TS 103 701 keeps its standard
+method status under ISO/IEC 17025 7.2.1 untouched. Offering SCA/FI screening again later
+is a scope decision, and it would come back as a method library revision with the
+verdict-chain question answered before it is seeded.
 
-Excluding it must not make a failure invisible, which is the real objection to excluding.
-So gate 8 rule 10: where a method excluded from the chain carries FAIL or INCONCLUSIVE,
-the report must state that result explicitly. The screening is reported on its own terms,
-beside the overall verdict rather than inside it.
-
-Until the lab ratifies, the predicate refuses and names the method. Do not invent a key.
+Gate 7 rule 10 — every method maps to a provision key, or is explicitly excluded by
+recorded lab policy — now passes vacuously. **Keep it.** It costs nothing and it is the
+guard that catches the next scheme-defined method before it silently distorts an overall
+verdict. The same goes for gate 8 rule 10 and the exclusions table: keep the mechanism,
+drop the seeded CLT-SCA-FI-01 proposal row.
 
 ### One test case per group, today
 

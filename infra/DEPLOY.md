@@ -31,9 +31,25 @@ docker compose -f infra/docker-compose.yml run --rm app php artisan db:seed
 docker compose -f infra/docker-compose.yml up -d
 ```
 
-Then install the audit triggers and revoke the grants (see
-`infra/initdb/10-audit-immutability.sql`) and **prove the revocation works** before
-going further.
+Then install the audit triggers and revoke the grants (see `infra/initdb/README.md`) and
+**prove the revocation works** before going further.
+
+## Check the panel is styled, not just served
+
+A 200 from `/admin/login` proves the route works, not that the page is usable. The front
+end is compiled by Vite at build time, and if that step is skipped the panel renders as
+unstyled HTML — no layout, serif body text, and inline heroicon SVGs blown up to fill the
+screen, because the classes that size them were never generated. Hand-written stylesheets
+served from `public/` still load, so the result looks like a broken design rather than a
+missing build. Check three things, not one:
+
+1. The build manifest exists in the image — `ls -l public/build/manifest.json` inside the
+   app container.
+2. Filament's own compiled stylesheet is served, not only your own files.
+3. The rendered login page references a built asset under `/build/assets/`.
+
+Verifying only the stylesheets you wrote yourself is the trap: they load fine while the
+framework's do not.
 
 ## Backup
 

@@ -27,7 +27,7 @@ beyond the tracker components.
   (green passed, amber not passed) with the gate statement in full.
 - **Exception tracks** — stages 10 and 11 pulled out under "Triggered at any time",
   not in the sequence.
-- **ETSI verdict roll-up** — the 14 provision groups, 63 methods, with the
+- **ETSI verdict roll-up** — the provision groups (13 in library rev 1.3), 62 methods, with the
   reconciliation line.
 
 ## The gate box: three boxes, not one

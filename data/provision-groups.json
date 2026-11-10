@@ -1,16 +1,67 @@
 [
- {"clause":"5.1","title":"No universal default passwords","methods_in_library":5},
- {"clause":"5.2","title":"Implement a means to manage reports of vulnerabilities","methods_in_library":3},
- {"clause":"5.3","title":"Keep software updated","methods_in_library":16},
- {"clause":"5.4","title":"Securely store sensitive security parameters","methods_in_library":4},
- {"clause":"5.5","title":"Communicate securely","methods_in_library":8},
- {"clause":"5.6","title":"Minimize exposed attack surfaces","methods_in_library":9},
- {"clause":"5.7","title":"Ensure software integrity","methods_in_library":2},
- {"clause":"5.8","title":"Ensure that personal data is secure","methods_in_library":3},
- {"clause":"5.9","title":"Make systems resilient to outages","methods_in_library":3},
- {"clause":"5.10","title":"Examine system telemetry data","methods_in_library":1},
- {"clause":"5.11","title":"Make it easy for users to delete user data","methods_in_library":4},
- {"clause":"5.12","title":"Make installation and maintenance of devices easy","methods_in_library":3},
- {"clause":"5.13","title":"Validate input data","methods_in_library":1},
- {"clause":"SCA-FI","title":"SCA / FI screening (scheme-defined)","methods_in_library":1}
+ {
+  "clause": "5.1",
+  "title": "No universal default passwords",
+  "methods_in_library": 5
+ },
+ {
+  "clause": "5.2",
+  "title": "Implement a means to manage reports of vulnerabilities",
+  "methods_in_library": 3
+ },
+ {
+  "clause": "5.3",
+  "title": "Keep software updated",
+  "methods_in_library": 16
+ },
+ {
+  "clause": "5.4",
+  "title": "Securely store sensitive security parameters",
+  "methods_in_library": 4
+ },
+ {
+  "clause": "5.5",
+  "title": "Communicate securely",
+  "methods_in_library": 8
+ },
+ {
+  "clause": "5.6",
+  "title": "Minimize exposed attack surfaces",
+  "methods_in_library": 9
+ },
+ {
+  "clause": "5.7",
+  "title": "Ensure software integrity",
+  "methods_in_library": 2
+ },
+ {
+  "clause": "5.8",
+  "title": "Ensure that personal data is secure",
+  "methods_in_library": 3
+ },
+ {
+  "clause": "5.9",
+  "title": "Make systems resilient to outages",
+  "methods_in_library": 3
+ },
+ {
+  "clause": "5.10",
+  "title": "Examine system telemetry data",
+  "methods_in_library": 1
+ },
+ {
+  "clause": "5.11",
+  "title": "Make it easy for users to delete user data",
+  "methods_in_library": 4
+ },
+ {
+  "clause": "5.12",
+  "title": "Make installation and maintenance of devices easy",
+  "methods_in_library": 3
+ },
+ {
+  "clause": "5.13",
+  "title": "Validate input data",
+  "methods_in_library": 1
+ }
 ]

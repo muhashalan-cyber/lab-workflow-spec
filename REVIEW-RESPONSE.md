@@ -262,3 +262,46 @@ served assets; and FrankenPHP's embedded Caddy had no `$HOME` to persist state i
 had been dismissed earlier as cosmetic log noise and was a real misconfiguration. Both
 fixed in the application. The lesson worth keeping: a permissive `chown -R` hid two
 posture defects, and tightening it is what exposed them.
+
+---
+
+# Method library rev 1.3, and a build defect in this package — 11 November 2026
+
+**`CLT-SCA-FI-01` removed from the method library by lab decision.** Rev 1.3 holds **62
+methods**: 36 conditional, 7 unconditional mandatory, 19 unconditional recommended, across
+13 provision groups. That resolves the verdict-chain question by removing the method
+rather than answering it, and it is the cleaner outcome — no synthetic provision key, no
+exclusion policy to ratify, and TS 103 701 keeps its standard-method status under ISO/IEC
+17025 7.2.1 untouched.
+
+Keep the exclusion mechanism. Gate 7 rule 10 now passes vacuously, but it costs nothing
+and it is what catches the next scheme-defined method before it distorts an overall
+verdict. Drop only the seeded `CLT-SCA-FI-01` proposal row.
+
+**Knock-on that needs a document change, not a code change:** PR-WKF-01 rev 3.0's gate
+statements for gates 3 and 5 say "all 63 methods" verbatim, and the v3.0 tracker's sheet
+04 totals 63. Those are quoted from controlled documents and have deliberately **not**
+been edited here — `data/workflow.json` and `reference/` still carry the source text as
+written. At PR-WKF-01's next revision the gate statements should stop hardcoding a count
+and say "every method in the pinned library revision" instead, so the workflow and the
+method library stop being coupled by a number.
+
+**The panel rendered as unstyled HTML, and the cause was a commented-out line in this
+package's Dockerfile.** `# RUN npm ci && npm run build` shipped disabled, and the image
+had no Node to run it with. Filament compiles its CSS and JS through Vite, so without that
+step there is no layout, no typography, and inline heroicon SVGs expand to fill the
+viewport because the utility classes that size them were never generated. The three
+hand-written lab stylesheets served from `public/` loaded perfectly throughout, which is
+why it looked like a broken design rather than a missing build.
+
+The Dockerfile now installs Node and runs the build after `composer install`, because
+Filament's theme CSS imports from `vendor/filament`. `infra/DEPLOY.md` gains a three-part
+check: the build manifest exists, Filament's own stylesheet is served, and the rendered
+page references a built asset. The earlier verification — "all three lab stylesheets
+served at the right sizes" — was true and proved nothing, because it checked only the
+files the session had written itself.
+
+**`ics_support` stays nullable at insert.** The build session's judgement was right: a job
+opens with one empty row per method and the ICS is declared during stage 3, so a NOT NULL
+column would make opening a job impossible. It is a gate-time requirement enforced by
+`g3.r2`. The data model's "required on every row" has been reworded to say so.

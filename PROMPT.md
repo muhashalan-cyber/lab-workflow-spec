@@ -37,8 +37,8 @@ Constraints that matter:
   reachable from here, match what it runs.
 - **Seed from `data/`; don't invent reference data.** Those files were extracted from the
   lab's controlled documents, which you don't have and can't re-derive. The workflow is
-  11 stages, 25 steps, 51 requirements, 9 gates. The method library is 63 methods, 37 of
-  them conditional.
+  11 stages, 25 steps, 51 requirements, 9 gates. The method library is rev 1.3: 62
+  methods, 36 of them conditional.
 - **Don't answer the open questions in `docs/01-requirements.md`.** They're mine to
   decide. Build around them and tell me when one blocks you.
 
