@@ -98,12 +98,23 @@ least-privilege access are genuinely in place.
 **Machine rules**
 
 1. `job_methods` holds exactly 63 rows for the job.
-2. Every row whose method has `conditional = true` has `ics_support` in (Y, N, N-A),
-   with `ics_declared_by` and `ics_declared_at` set. **37 rows in rev 1.2.**
+2. **Every one of the 63** has `ics_support` in (Y, N, N-A), with `ics_declared_by` and
+   `ics_declared_at` set. `N-A` is legal **only** where `conditional = true`.
    *Do not test `conditions` for emptiness:* 26 of the 63 carry the literal string
    `N/A` in the Conditions column, meaning unconditional. `data/methods.json` carries
-   a normalised `conditional` boolean and nulls `conditions` on those 26 — use it.
-3. Every row has `applicable` in (Y, N).
+   a normalised `conditional` boolean — use it.
+
+   > An earlier revision required `ics_support` only on the 37 conditional methods. That
+   > was wrong, and it made the applicability rule unimplementable: 19 of the 63 are
+   > unconditional **recommendations**, and whether the supplier claimed them is a real
+   > choice with nowhere to live. TS 103 701 clause 4.4 settles it — the Support column
+   > carries Yes, No or N/A for *every* provision. "Yes" claims it, "No" means applicable
+   > but not fulfilled with a justification, and N/A is reserved for conditional
+   > provisions the DUT cannot fulfil. The lab's own settled position agrees: every N/A
+   > verdict must trace to a Y/N/N-A declaration in mapping column G.
+
+3. Every row has `applicable` in (Y, N), and **`applicable = 'Y'` exactly where
+   `ics_support = 'Y'`**.
 4. Every row has a non-empty `applicability_basis`.
 5. `jobs.constrained_device` is not null.
 6. The DUT block on `jobs` is complete: manufacturer_model, serial_identifier,
@@ -111,6 +122,11 @@ least-privilege access are genuinely in place.
    "Not provided" with a reason — never left null.
 7. A `job_ixit_documents` row exists (section 1 and 2 complete).
 8. No `information_gaps` row with `blocking = true` is unresolved.
+9. Every unconditional **mandatory** method has `ics_support` recorded, and where it is
+   not `Y` the job carries a recorded acknowledgement that overall PASS is unreachable —
+   clause 4.4: "The mandatory provisions shall be claimed by the SO to achieve an overall
+   PASS verdict." Of the 63: 37 conditional, 7 unconditional mandatory, 19 unconditional
+   recommended.
 
 **Attestation** — each N was challenged against its condition and against IXIT section 2.
 
@@ -235,6 +251,41 @@ The system must derive the other two or the report cannot state an overall verdi
 Derive these; never let anyone type them. A `job_provision_verdicts` table keyed on
 (job, provision) holding the derived group verdict and its basis makes the chain
 auditable, which is what an assessor will trace.
+
+### CLT-SCA-FI-01 sits outside the verdict chain
+
+One method cannot be placed in a test group. `CLT-SCA-FI-01` carries the literal `ts_ref`
+of `N/A`, because SCA / FI screening is scheme-defined rather than an EN 303 645
+provision. The claim that `ts_ref` names every method's provision holds for 62 of 63.
+
+**Recommended position, for the lab to ratify: exclude it from the Table 1 chain and
+report it separately.** This is not a presentation preference. Table 1 composes the
+overall verdict from provisions claimed "Yes" in the ICS, and SCA/FI is not such a
+provision. Giving it a synthetic provision key so it flows through Table 1 would alter
+clause 4.6 verdict assignment — and the lab's recorded position in DCN-2026-01 §2 is that
+TS 103 701 remains a **standard method** under ISO/IEC 17025 7.2.1 precisely because
+nothing alters verdict assignment, the provision set, or a test unit. A change that does
+converts it to a **laboratory-modified standard method**, requiring 7.2.2 validation and
+client notification of deviation before use. That is a far larger consequence than the
+placement of one method.
+
+Excluding it must not make a failure invisible, which is the real objection to excluding.
+So gate 8 rule 10: where a method excluded from the chain carries FAIL or INCONCLUSIVE,
+the report must state that result explicitly. The screening is reported on its own terms,
+beside the overall verdict rather than inside it.
+
+Until the lab ratifies, the predicate refuses and names the method. Do not invent a key.
+
+### One test case per group, today
+
+In Mapping rev 1.2 every test group holds exactly one test case: 62 provisions, 62 groups,
+all of size one. Table 2's precedence logic therefore cannot aggregate anything against
+this library — the derivation is an identity mapping, and gate 7 rule 9 today checks that
+a trivial mapping was performed. Implement Table 2 properly regardless, because a later
+mapping revision may carry several test cases per provision, and assert the
+one-per-provision property against the seeded data so a revision that changes it fails
+loudly rather than silently altering verdicts. Table 1 still genuinely aggregates: 62
+groups into one overall verdict.
 
 **External evidence (clause 4.7)** is not modelled in v1. A test group can take a PASS
 without running its test cases when third-party evidence is adequate, and the laboratory

@@ -141,8 +141,10 @@ than a side effect of a query.
 
 ## Methods and verdicts
 
-**`job_methods`** — `job_id`, `method_id`, `ics_support` (Y/N/N-A, null where the method
-carries no condition), `ics_declared_by`, `ics_declared_at`, `applicable` (Y/N),
+**`job_methods`** — `job_id`, `method_id`, `ics_support` (Y/N/N-A, **required on every
+row**; `N-A` permitted only where the method is conditional — TS 103 701 clause 4.4 gives
+every provision a Support value, and the 19 unconditional recommendations need somewhere
+to record whether the supplier claimed them), `ics_declared_by`, `ics_declared_at`, `applicable` (Y/N),
 `applicability_basis`, `verdict_tester`, `verdict_tester_by`, `verdict_tester_at`,
 `verdict_reviewer`, `verdict_reviewer_by`, `verdict_reviewer_at`, `final_verdict`,
 `tester_notes`, `reviewer_notes`. Unique on (job_id, method_id). 63 rows per job.

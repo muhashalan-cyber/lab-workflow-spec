@@ -155,8 +155,8 @@
     },
     {
      "id": "g3.r2",
-     "description": "every job_method whose method has conditional = true has ics_support in (Y, N, N-A) with ics_declared_by and ics_declared_at set",
-     "failure": "A conditional method has no ICS Support value. 37 methods are conditional in rev 1.2 — test the normalised 'conditional' boolean, not whether the Conditions text is empty",
+     "description": "every job_method has ics_support in (Y, N, N-A); N-A is legal only where the method is conditional",
+     "failure": "A method has no ICS Support value, or carries N-A on an unconditional method. TS 103 701 clause 4.4: the Support column carries Yes, No or N/A for EVERY provision - N/A is reserved for conditional provisions the DUT cannot fulfil, No means applicable but not fulfilled. All 63 need a value, not only the 37 conditional ones.",
      "severity": "blocking"
     },
     {
@@ -173,8 +173,8 @@
     },
     {
      "id": "g3.r5",
-     "description": "applicable = 'Y' exactly where ics_support = 'Y', or where the method is unconditional and claimed",
-     "failure": "Applicability does not follow the ICS claim",
+     "description": "applicable = 'Y' exactly where ics_support = 'Y'",
+     "failure": "A method's applicability does not follow its ICS Support value",
      "severity": "blocking"
     },
     {
@@ -199,6 +199,12 @@
      "id": "g3.r9",
      "description": "no information_gaps row with blocking = true is unresolved",
      "failure": "A blocking information gap is open",
+     "severity": "blocking"
+    },
+    {
+     "id": "g3.r10",
+     "description": "every unconditional mandatory method (m_or_r = M, conditional = false) has ics_support recorded, and where it is not 'Y' the job carries a recorded acknowledgement that overall PASS is unreachable",
+     "failure": "A mandatory provision is unclaimed and nothing records that overall PASS is therefore unreachable (TS 103 701 clause 4.4)",
      "severity": "blocking"
     }
    ],
@@ -432,6 +438,12 @@
      "description": "test group verdicts are derived for every provision claimed Yes, per TS 103 701 Table 2",
      "failure": "Provision-level test group verdicts have not been derived from the test case verdicts",
      "severity": "blocking"
+    },
+    {
+     "id": "g7.r10",
+     "description": "every method with a final verdict maps to a provision key, or is explicitly excluded from the verdict chain by recorded lab policy",
+     "failure": "A method cannot be placed in a test group and no exclusion is recorded. CLT-SCA-FI-01 carries ts_ref 'N/A' because SCA/FI screening is scheme-defined rather than an EN 303 645 provision",
+     "severity": "blocking"
     }
    ],
    "attestations": [
@@ -500,6 +512,12 @@
      "id": "g8.r9",
      "description": "issued_at and transmittal_reference are set",
      "failure": "The report has not been issued or the transmittal is not recorded",
+     "severity": "blocking"
+    },
+    {
+     "id": "g8.r10",
+     "description": "where a method excluded from the verdict chain carries FAIL or INCONCLUSIVE, the report states that result explicitly",
+     "failure": "An excluded method failed and the report does not say so. Exclusion from the overall verdict must not make a failure invisible",
      "severity": "blocking"
     }
    ],
@@ -661,5 +679,16 @@
   ],
   "attestations": "Signed separately from machine rules and never rendered as checks. A gate with all machine rules satisfied but an unsigned attestation does not pass.",
   "blocked_reasons": "Each failing rule contributes its id and failure message, so a blocked gate names conditions rather than reporting a generic failure."
+ },
+ "notes_on_the_method_library": {
+  "one_test_case_per_group": "In Mapping rev 1.2 every test group holds exactly one test case: 62 provisions, 62 groups, all of size one. Table 2's precedence logic therefore cannot aggregate anything against this library and the derivation is an identity mapping. Implement Table 2 properly anyway - a later revision may carry several test cases per provision - and assert the one-per-provision property against the seeded data so a revision that changes it fails loudly instead of silently altering verdicts.",
+  "unmappable_method": "CLT-SCA-FI-01 carries the literal ts_ref 'N/A'. SCA / FI screening is scheme-defined, not an EN 303 645 provision, so it has no provision key and cannot sit in a test group. Do not invent one: see the recorded position in docs/03-gate-rules.md.",
+  "method_counts": {
+   "total": 63,
+   "conditional": 37,
+   "unconditional_mandatory": 7,
+   "unconditional_recommended": 19,
+   "mappable_to_a_provision": 62
+  }
  }
 }

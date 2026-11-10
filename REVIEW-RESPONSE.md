@@ -208,3 +208,57 @@ rules that carry the distinction, so it lives in the spec rather than only in th
 the system" in the quietest type on the card while the unsigned state shouts in amber —
 the asymmetry runs the wrong way, since the signed case is the risky one. And the
 attestation box should carry a count matching "8 of 8 conditions met".
+
+---
+
+# Response to the gate 7 spike and gate 3 mismatch — 11 November 2026
+
+**Gate 3 rule 5 was unimplementable, and the fix is in the standard.** The build session
+found that 19 of the 63 methods are unconditional *recommendations*, whose claim status is
+a genuine supplier choice, while the data model nulled `ics_support` for every
+unconditional method — leaving nowhere to record it. The error was requiring
+`ics_support` only on the 37 conditional methods. TS 103 701 clause 4.4 gives **every**
+provision a Support value: "Yes" claims it, "No" means applicable but not fulfilled with a
+justification, and "N/A" is reserved for conditional provisions the DUT cannot fulfil. The
+lab's own settled position agrees — every N/A verdict must trace to a Y/N/N-A declaration
+in mapping column G. So `ics_support` is now required on all 63, `N-A` is constrained to
+conditional methods, and `applicable = 'Y'` exactly where `ics_support = 'Y'` becomes
+implementable. A new rule covers the clause 4.4 requirement that mandatory provisions be
+claimed for overall PASS to be reachable.
+
+Leaving the predicate out rather than guessing was the right call, and the fail-closed
+design did exactly what it was built for.
+
+**CLT-SCA-FI-01: exclude from the verdict chain, report separately — and this is a
+method-status decision, not a scheme preference.** The session leaned toward including it
+via a synthetic provision key, on the reasonable ground that excluding makes a FAIL
+invisible. But Table 1 composes the overall verdict from provisions claimed "Yes" in the
+ICS, and SCA/FI screening is scheme-defined rather than an EN 303 645 provision. Routing
+it through Table 1 alters clause 4.6 verdict assignment — and DCN-2026-01 §2 records that
+TS 103 701 remains a **standard method** under ISO/IEC 17025 7.2.1 precisely because
+nothing alters verdict assignment, the provision set or a test unit. A change that does
+converts it to a laboratory-modified standard method, requiring 7.2.2 validation and
+client notification of deviation. That consequence is much larger than the placement of
+one method.
+
+The invisibility objection is answered by gate 8 rule 10: where a method excluded from the
+chain carries FAIL or INCONCLUSIVE, the report must state that result explicitly. The
+screening is reported beside the overall verdict rather than inside it. Recommended, for
+Muhannad to ratify; until then the predicate refuses and names the method, which is
+correct.
+
+**One test case per group, today.** Every test group in Mapping rev 1.2 holds exactly one
+test case — 62 provisions, 62 groups, all of size one — so Table 2's precedence logic
+cannot aggregate anything and gate 7 rule 9 currently checks that a trivial mapping was
+performed. Implementing Table 2 properly anyway, and asserting the one-per-provision
+property against the seeded data so a later revision fails loudly, is the right response
+and is now recorded in `gates.json`. Table 1 still genuinely aggregates 62 groups into one
+overall verdict, so the middle level earns its place.
+
+**Two deployment defects**, both surfaced by narrowing the Dockerfile's `chown` from the
+whole application to `storage` and `bootstrap/cache`: Octane was writing
+`public/frankenphp-worker.php` at boot, so the application had been rewriting its own
+served assets; and FrankenPHP's embedded Caddy had no `$HOME` to persist state in, which
+had been dismissed earlier as cosmetic log noise and was a real misconfiguration. Both
+fixed in the application. The lesson worth keeping: a permissive `chown -R` hid two
+posture defects, and tightening it is what exposed them.
