@@ -258,6 +258,46 @@ resources and is a project of its own. Do not start Group B before the write act
 the three-section job list are working — a system with twelve registers and no way to run
 a job is the wrong half finished.
 
+## Gate failures in the interface: sentences, not rule ids
+
+Decided 11 November 2026, after `g8.r10` appeared in a conversation with the lab and meant
+nothing to the person who has to use the system.
+
+Rule identifiers (`g3.r2`, `g8.r10`, …) exist for **traceability, not for reading**. They
+give the audit log a stable handle for why a gate refused, and they let the spec, the
+tests and the rule table refer to one thing unambiguously. A user never needs one to do
+their job, and a screen that leads with one is asking them to learn a private vocabulary
+in order to find out what is wrong.
+
+**What a refused gate shows:**
+
+> **Gate 8 cannot close yet — 2 items outstanding**
+>
+> - An applicable method has not been tested — 3 methods still at NOT TESTED *(you)*
+> - The report omits the decision rule *(Authorized Signatory)*
+
+That is the rule's own `failure` sentence, which every rule in `gates.json` already
+carries, plus the count and **who can act on it**. The last part matters most: "the report
+is unsigned" tells someone a fact; "the report is unsigned — Authorized Signatory" tells
+them whether to go and fix it or go and ask someone.
+
+**Rules for presentation:**
+
+- Lead with the `failure` sentence. Never the id, never the `description` — the
+  description is written for whoever implements the rule, the failure for whoever hit it.
+- Order blocking items before non-blocking, and name the role that can clear each one.
+- Attestations read as what they are: *"Awaiting attestation by the Technical Reviewer"* —
+  never phrased as though the system checked something.
+- Unevaluable items say so plainly and say why: *"Cannot be checked — IXIT entries are
+  not held in the system."* An item the system cannot evaluate must never look like one it
+  evaluated and passed.
+- The rule id may appear **only** as muted secondary text or on hover, for an assessor
+  tracing a refusal back to the rule table. It is never the headline and never the only
+  thing shown.
+
+The audit row keeps the id, because "gate 8 refused: g8.r7, g8.r4" is the form that stays
+meaningful in five years when the wording of the message has been improved twice.
+
 ## Not in v1
 
 Client portal. Scheduling and resourcing — CipherOne already has a resource calendar.
