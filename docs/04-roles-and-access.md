@@ -16,6 +16,33 @@ the job's planned end date.
 | Authorized Signatory | Sign and issue the report, close gate 8 | Sign for work they performed, absent a documented deputy arrangement |
 | Auditor | Read every job, record, history row and the audit log; export | Change anything |
 
+## Job administration: a separate authority from technical work (11 Nov 2026)
+
+Creating, editing, archiving and moving jobs between the three sections is restricted to
+**Lab Manager, Quality Manager and Technical Manager**. No engineer edits a job's
+particulars — client, DUT, identifiers, assignments, dates — because those are what the
+contract review accepted, and a job whose particulars drift away from its accepted scope
+has broken the only link between what was agreed and what was tested.
+
+Conversely, **marking work done is open to everyone assigned to the job**, and requires a
+written confirmation stored against the job. This is deliberately wide: the person who did
+the work is the person who should record it, and narrowing it to one named engineer means
+the second engineer's work gets recorded by someone who did not do it.
+
+The two settle together because they are different kinds of claim. *What this job is* is an
+administrative fact set at contract review. *What was done on it* is a technical fact
+recorded by whoever did it. Separation of duties sits at the gates, where a claim gets
+checked by someone who did not make it, and is untouched by either of these.
+
+> **Three role names need reconciling before implementation.** `RG-CMP-01` and
+> `RG-PER-TASK-01` are authoritative. **Lab Manager** is confirmed real — it appears in
+> ORG-STR-01 and in the CTO-to-Lab-Manager authorization letter — and is not the same
+> thing as this document's *Lab Administrator*, which is a system-administration role.
+> Whether **Technical Manager** is the same authority as *Technical Reviewer* or a
+> distinct one is a question for the competence register. Do not guess a mapping in code;
+> the authority flags in `RG-CMP-01` decide it, and if the register does not yet name
+> these roles, that is a document change Muhannad owns.
+
 The auditor role exists for SAAC assessors. A time-boxed read-only account beats
 exporting screenshots, and the account's own activity is logged like anyone else's.
 

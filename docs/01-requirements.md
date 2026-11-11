@@ -21,9 +21,18 @@ In scope:
 - Reports issued, and the sign-offs at gates 5, 7, 8 and 9
 - Who did what, when, and what the value was before they changed it
 
-Out of scope for v1: `Process_Control.xlsx` registers are referenced by ID rather than
-replaced; the IXIT document stays a .docx; evidence files stay in the job folder; the
-report is still written in Word. Also excluded: a client portal, scheduling and
+Out of scope for v1: the IXIT document stays a .docx; evidence files stay in the job
+folder; the report is still written in Word.
+
+**Scope change, 11 November 2026 — the QMS registers come into the system.** The earlier
+decision to reference `Process_Control.xlsx` registers by ID rather than replace them is
+reversed: all QMS registers are to be held in the app, with .xlsx export so the
+spreadsheet view survives without being a second master. `docs/07-application-surface.md`
+enumerates them in three groups and sets the sequencing — job-linked registers first,
+lab-wide registers second, and `MU_Budgets` retired rather than ported because
+measurement uncertainty is not applicable to this lab's testing. This roughly doubles v1,
+so it is additive to the build order rather than ahead of it: the write actions and the
+three-section job list come first. Also excluded: a client portal, scheduling and
 resourcing (CipherOne already has a resource calendar), and generating the report
 document from the record.
 
