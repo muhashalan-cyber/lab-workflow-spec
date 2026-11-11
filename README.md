@@ -19,6 +19,7 @@ executable, and verify everything as you build.
 | 5 | `docs/04-roles-and-access.md` | Roles, the permission matrix, and the separation-of-duties rules |
 | 6 | `docs/05-exports.md` | The tracker .xlsx layout to reproduce, sheet by sheet |
 | 7 | `docs/06-validation-plan.md` | The ISO 7.11.2 test cases. Write these as the test suite |
+| 8 | `docs/07-application-surface.md` | What screens exist and what each lets a person do |
 
 ## What is in `data/`
 
